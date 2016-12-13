@@ -21,7 +21,6 @@ public class SwaggerDefinition {
     private Map<String, JsonObject> properties;
 
     public SwaggerDefinition(String name, Map<String, JsonObject> properties) {
-        super();
         this.name = name;
         this.properties = properties;
     }

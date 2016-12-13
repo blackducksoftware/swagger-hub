@@ -3,6 +3,7 @@ package com.blackducksoftware.integration.swagger;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,8 +21,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class RestServiceClassGenerator {
-    public static void main(final String[] args) throws IOException {
-        File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.3.1.json").getFile());
+    public static void main(final String[] args) throws IOException, URISyntaxException {
+        File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.3.1.json").toURI());
         final FileInputStream jsonFile = new FileInputStream(apiJsonFile);
         final String json = IOUtils.toString(jsonFile, "UTF-8");
 

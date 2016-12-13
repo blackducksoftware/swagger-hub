@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,13 +40,14 @@ public class EnumCreator {
 
     private Template template;
 
-    public static void main(String[] args) throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException, TemplateException {
+    public static void main(String[] args)
+            throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException, TemplateException, URISyntaxException {
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(EnumCreator.class, "/");
         configuration.setDefaultEncoding("UTF-8");
 
-        File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.3.1.json").getFile());
-        EnumCreator enumCreator = new EnumCreator("/Users/ekerwin/Documents/generated/", configuration);
+        File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.3.1.json").toURI());
+        EnumCreator enumCreator = new EnumCreator("/Users/jrichard/Documents/generated/", configuration);
 
         final FileInputStream jsonFile = new FileInputStream(apiJsonFile);
         final String json = IOUtils.toString(jsonFile, "UTF-8");
