@@ -36,6 +36,10 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateNotFoundException;
 
 public class EnumCreator {
+    private static final String HUB_COMMON_RESPONSE_PATH = "/Users/ekerwin/Documents/source/integration/hub-common-response";
+
+    private static final String PATH_TO_PLACE_ENUMS = HUB_COMMON_RESPONSE_PATH + "/src/main/java/com/blackducksoftware/integration/hub/model/enumeration";
+
     private final String baseFilePath;
 
     private final Template template;
@@ -47,9 +51,7 @@ public class EnumCreator {
         configuration.setDefaultEncoding("UTF-8");
 
         final File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.5.0.json").toURI());
-        final EnumCreator enumCreator = new EnumCreator(
-                "/Users/ekerwin/Documents/source/integration/hub-common-response/src/main/java/com/blackducksoftware/integration/hub/model/type",
-                configuration);
+        final EnumCreator enumCreator = new EnumCreator(PATH_TO_PLACE_ENUMS, configuration);
 
         final FileInputStream jsonFile = new FileInputStream(apiJsonFile);
         final String json = IOUtils.toString(jsonFile, "UTF-8");
