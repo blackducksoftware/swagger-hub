@@ -8,17 +8,17 @@ public class SwaggerEnumParserTest {
     @Test
     public void testRemovingDuplicateWords() {
         final SwaggerEnumParser swaggerEnumParser = new SwaggerEnumParser();
-        String s = swaggerEnumParser.removeDuplicateWords("aSimpleSimpleTest");
-        assertEquals("aSimpleTest", s);
+        String s = swaggerEnumParser.removeDuplicateWords("ASimpleSimpleTest");
+        assertEquals("ASimpleTest", s);
 
-        s = swaggerEnumParser.removeDuplicateWords("aSimpleSimpleSimpleTest");
-        assertEquals("aSimpleTest", s);
+        s = swaggerEnumParser.removeDuplicateWords("ASimpleSimpleSimpleTest");
+        assertEquals("ASimpleTest", s);
 
-        s = swaggerEnumParser.removeDuplicateWords("aSimpleSimpleSimpleTestTest");
-        assertEquals("aSimpleTest", s);
+        s = swaggerEnumParser.removeDuplicateWords("ASimpleSimpleSimpleTestTest");
+        assertEquals("ASimpleTest", s);
 
-        s = swaggerEnumParser.removeDuplicateWords("trickyTrickyTestTest");
-        assertEquals("trickyTest", s);
+        s = swaggerEnumParser.removeDuplicateWords("TrickyTrickyTestTest");
+        assertEquals("TrickyTest", s);
     }
 
 }

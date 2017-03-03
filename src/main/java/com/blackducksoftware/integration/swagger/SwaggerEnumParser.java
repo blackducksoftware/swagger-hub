@@ -56,7 +56,7 @@ public class SwaggerEnumParser {
             nameWithoutDuplicates = nameWithoutDuplicates.replaceAll("(?i)(" + repeated + ")+", repeated);
         }
 
-        return StringUtils.uncapitalize(nameWithoutDuplicates);
+        return nameWithoutDuplicates;
     }
 
 }
