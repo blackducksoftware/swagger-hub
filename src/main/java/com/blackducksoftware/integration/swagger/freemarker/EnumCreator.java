@@ -36,18 +36,20 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateNotFoundException;
 
 public class EnumCreator {
-    private String baseFilePath;
+    private final String baseFilePath;
 
-    private Template template;
+    private final Template template;
 
-    public static void main(String[] args)
+    public static void main(final String[] args)
             throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException, TemplateException, URISyntaxException {
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(EnumCreator.class, "/");
         configuration.setDefaultEncoding("UTF-8");
 
-        File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.3.1.json").toURI());
-        EnumCreator enumCreator = new EnumCreator("/Users/jrichard/Documents/generated/", configuration);
+        final File apiJsonFile = new File(EnumCreator.class.getClassLoader().getResource("api-docs_3.5.0.json").toURI());
+        final EnumCreator enumCreator = new EnumCreator(
+                "/Users/ekerwin/Documents/source/integration/hub-common-response/src/main/java/com/blackducksoftware/integration/hub/model/type",
+                configuration);
 
         final FileInputStream jsonFile = new FileInputStream(apiJsonFile);
         final String json = IOUtils.toString(jsonFile, "UTF-8");
@@ -55,17 +57,17 @@ public class EnumCreator {
         final JsonParser jsonParser = new JsonParser();
         final JsonObject swaggerJson = jsonParser.parse(json).getAsJsonObject();
 
-        SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser();
-        List<SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getAllObjectDefinitions(swaggerJson);
+        final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser();
+        final List<SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getAllObjectDefinitions(swaggerJson);
 
-        SwaggerEnumParser swaggerEnumParser = new SwaggerEnumParser();
-        Map<String, List<String>> enums = swaggerEnumParser.getEnumNameToValues(allObjectDefinitions);
-        for (Map.Entry<String, List<String>> entry : enums.entrySet()) {
+        final SwaggerEnumParser swaggerEnumParser = new SwaggerEnumParser();
+        final Map<String, List<String>> enums = swaggerEnumParser.getEnumNameToValues(allObjectDefinitions);
+        for (final Map.Entry<String, List<String>> entry : enums.entrySet()) {
             enumCreator.createEnumFile(entry.getKey(), entry.getValue());
         }
     }
 
-    public EnumCreator(String baseFilePath, Configuration configuration)
+    public EnumCreator(final String baseFilePath, final Configuration configuration)
             throws TemplateNotFoundException, MalformedTemplateNameException, ParseException, IOException {
         this.baseFilePath = baseFilePath;
         template = configuration.getTemplate("hubEnum.ftl");
@@ -74,16 +76,16 @@ public class EnumCreator {
         new File(baseFilePath).mkdirs();
     }
 
-    public void createEnumFile(String enumClassName, List<String> enumValues) throws TemplateException, IOException {
-        String filename = enumClassName + ".java";
+    public void createEnumFile(final String enumClassName, final List<String> enumValues) throws TemplateException, IOException {
+        final String filename = enumClassName + ".java";
         File enumFile = new File(baseFilePath);
         enumFile = new File(enumFile, filename);
 
-        Map<String, Object> model = new HashMap<>();
+        final Map<String, Object> model = new HashMap<>();
         model.put("enumClassName", enumClassName);
         model.put("enumValues", enumValues);
 
-        FileWriter fileWriter = new FileWriter(enumFile);
+        final FileWriter fileWriter = new FileWriter(enumFile);
         template.process(model, fileWriter);
     }
 
