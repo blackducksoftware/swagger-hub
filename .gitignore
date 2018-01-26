@@ -1,6 +1,12 @@
+# operating system
+.DS_Store
+
+# ide
 .settings/
 .classpath
 .project
-pom.xml.bak
-.DS_Store
-target/
+bin/
+
+# build tool
+.gradle/
+build/
