@@ -21,28 +21,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.blackducksoftware.integration.swagger;
+package com.blackducksoftware.integration.swagger.model;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.google.gson.JsonObject;
+import com.blackducksoftware.integration.util.Stringable;
 
-public class SwaggerDefinition {
-    private String name;
-
-    private Map<String, JsonObject> properties;
-
-    public SwaggerDefinition(String name, Map<String, JsonObject> properties) {
-        this.name = name;
-        this.properties = properties;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Map<String, JsonObject> getProperties() {
-        return properties;
-    }
+public class SwaggerDefinition extends Stringable {
+    public String definitionName;
+    public List<SwaggerDefinitionProperty> definitionProperties = new ArrayList<>();
 
 }

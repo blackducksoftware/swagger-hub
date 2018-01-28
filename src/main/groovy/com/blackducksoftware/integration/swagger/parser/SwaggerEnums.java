@@ -21,7 +21,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.blackducksoftware.integration.swagger;
+package com.blackducksoftware.integration.swagger.parser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,37 +30,46 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.blackducksoftware.integration.swagger.model.SwaggerDefinitionProperty;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class SwaggerEnumParser {
-    public Map<String, List<String>> getEnumNameToValues(final List<SwaggerDefinition> allObjectDefinitions) {
-        final Map<String, List<String>> enumNameToValues = new HashMap<>();
+public class SwaggerEnums {
+    private final Map<String, List<String>> enumNameToValues = new HashMap<>();
 
-        for (final SwaggerDefinition swaggerDefinition : allObjectDefinitions) {
-            for (final Map.Entry<String, JsonObject> propertyEntry : swaggerDefinition.getProperties().entrySet()) {
-                final JsonObject property = propertyEntry.getValue();
-                if (property.has("enum")) {
-                    final JsonArray enumValueArray = property.get("enum").getAsJsonArray();
-                    final List<String> values = new ArrayList<>();
-                    for (final JsonElement enumValue : enumValueArray) {
-                        values.add(enumValue.getAsString());
-                    }
-
-                    String enumName = swaggerDefinition.getName().replaceAll("(?i)view$", "");
-                    enumName += StringUtils.capitalize(propertyEntry.getKey().replaceAll("(?i)type$", ""));
-                    enumName += "Enum";
-                    enumName = removeDuplicateWords(enumName);
-                    enumNameToValues.put(enumName, values);
-                }
-            }
+    public void populateEnumField(final SwaggerDefinitionProperty swaggerDefinitionProperty, final String definitionName, final String propertyName, final JsonObject propertyJsonObject) {
+        final List<String> enumValues = getValues(propertyJsonObject);
+        if (enumValues == null) {
+            return;
         }
-
-        return enumNameToValues;
+        String enumName = definitionName.replaceAll("(?i)view$", "");
+        enumName += StringUtils.capitalize(propertyName.replaceAll("(?i)type$", ""));
+        enumName += "Enum";
+        enumName = removeDuplicateWords(enumName);
+        enumNameToValues.put(enumName, enumValues);
+        swaggerDefinitionProperty.enumType = enumName;
     }
 
-    public String removeDuplicateWords(final String name) {
+    private List<String> getValues(final JsonObject propertyJsonObject) {
+        if (propertyJsonObject.has("enum")) {
+            return getValuesFromArray(propertyJsonObject.getAsJsonArray("enum"));
+        } else if (propertyJsonObject.has("items") && propertyJsonObject.get("items").isJsonObject() && propertyJsonObject.getAsJsonObject("items").has("enum")) {
+            return getValuesFromArray(propertyJsonObject.getAsJsonObject("items").getAsJsonArray("enum"));
+        } else {
+            return null;
+        }
+    }
+
+    private List<String> getValuesFromArray(final JsonArray enumValueArray) {
+        final List<String> values = new ArrayList<>();
+        for (final JsonElement enumValue : enumValueArray) {
+            values.add(enumValue.getAsString());
+        }
+        return values;
+    }
+
+    private String removeDuplicateWords(final String name) {
         final List<String> repeatedWords = new ArrayList<>();
 
         final String[] words = StringUtils.splitByCharacterTypeCamelCase(name);

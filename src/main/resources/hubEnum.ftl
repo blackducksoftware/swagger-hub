@@ -1,4 +1,4 @@
-package com.blackducksoftware.integration.hub.model.enumeration;
+package ${enumPackage};
 
 public enum ${enumClassName} {
     ${enumValues?join(",\n    ")};
