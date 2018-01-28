@@ -18,6 +18,10 @@ public class ModelCreator {
     public static final String VIEW_DIRECTORY = "/com/blackducksoftware/integration/hub/model/view";
     public static final String ENUM_PACKAGE = "com.blackducksoftware.integration.hub.model.enumeration";
     public static final String VIEW_PACKAGE = "com.blackducksoftware.integration.hub.model.view";
+    public static final List<String> KNOWN_TYPES_MANUALLY_CREATED = [
+        'NameValuePairView',
+        'ComponentHit'
+    ]
 
     public static void main(final String[] args) throws Exception {
         final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.4.0.json").toURI());
@@ -33,20 +37,23 @@ public class ModelCreator {
         final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitions.getDefinitionsFromJson(swaggerJson)
 
         logPossibleErrors(swaggerDefinitions, swaggerProperties, allObjectDefinitions);
+        Set<String> possibleReferencesForProperties = new HashSet<>();
+        possibleReferencesForProperties.addAll(swaggerEnums.enumNameToValues.keySet());
+        possibleReferencesForProperties.addAll(allObjectDefinitions.keySet());
+        possibleReferencesForProperties.addAll(KNOWN_TYPES_MANUALLY_CREATED)
 
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(ModelCreator.class, "/");
         configuration.setDefaultEncoding("UTF-8");
         Template enumTemplate = configuration.getTemplate("hubEnum.ftl");
         Template viewTemplate = configuration.getTemplate("hubView.ftl");
-        JavaTypeMapper javaTypeMapper = new JavaTypeMapper();
 
         File enumBaseDirectory = new File(ModelCreator.BASE_DIRECTORY + ModelCreator.ENUM_DIRECTORY);
         File viewBaseDirectory = new File(ModelCreator.BASE_DIRECTORY + ModelCreator.VIEW_DIRECTORY);
         enumBaseDirectory.mkdirs();
         viewBaseDirectory.mkdirs();
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnums.enumNameToValues);
-        createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), javaTypeMapper);
+        createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties);
     }
 
     public static void createEnumFiles(File baseDirectory, Template template, Map<String, List<String>> enumNameToValues) {
@@ -63,25 +70,28 @@ public class ModelCreator {
         }
     }
 
-    public static void createViewFiles(File baseDirectory, Template template, List<SwaggerDefinition> swaggerDefinitions, JavaTypeMapper javaTypeMapper) {
+    public static void createViewFiles(File baseDirectory, Template template, List<SwaggerDefinition> swaggerDefinitions, Set<String> possibleReferencesForProperties) {
         swaggerDefinitions.each {
-            File viewFile = new File(baseDirectory, it.definitionName + ".java");
+            try {
+                File viewFile = new File(baseDirectory, it.definitionName + ".java");
 
-            final Map<String, Object> model = new HashMap<>();
-            model.put("viewPackage", ModelCreator.VIEW_PACKAGE)
-            model.put("className", it.definitionName);
-            List<Map<String, Object>> fields = new ArrayList<>();
-            model.put("classFields", fields);
+                final Map<String, Object> model = new HashMap<>();
+                model.put("viewPackage", ModelCreator.VIEW_PACKAGE)
+                model.put("className", it.definitionName);
+                List<Map<String, Object>> fields = new ArrayList<>();
+                model.put("classFields", fields);
 
-            it.definitionProperties.each { property ->
-                Map<String, Object> propertyModel = new HashMap<>();
-                propertyModel.put("name", property.name);
-                propertyModel.put("type", javaTypeMapper.getFullyQualifiedClassName(it.definitionName, property));
-                fields.add(propertyModel)
+                it.definitionProperties.each { property ->
+                    Map<String, Object> propertyModel = new HashMap<>();
+                    propertyModel.put("name", property.name);
+                    propertyModel.put("type", property.getFullyQualifiedClassName(possibleReferencesForProperties));
+                    fields.add(propertyModel)
+                }
+                final FileWriter fileWriter = new FileWriter(viewFile);
+                template.process(model, fileWriter);
+            } catch (Exception e) {
+                throw new Exception("Exception caught processing ${it.definitionName}: " + e.getMessage(), e);
             }
-
-            final FileWriter fileWriter = new FileWriter(viewFile);
-            template.process(model, fileWriter);
         }
     }
 

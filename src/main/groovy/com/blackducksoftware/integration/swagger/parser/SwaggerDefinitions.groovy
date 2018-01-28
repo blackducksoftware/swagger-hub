@@ -29,8 +29,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class SwaggerDefinitions {
-    private static final String containerStartDefinitionMarker = '\u00ab'
-    private static final String containerEndDefinitionMarker = '\u00bb'
+    public static final String containerStartDefinitionMarker = '\u00ab'
+    public static final String containerEndDefinitionMarker = '\u00bb'
+
     private static final List<String> knownDefinitionsToIgnore = [
         'boolean',
         'string',
