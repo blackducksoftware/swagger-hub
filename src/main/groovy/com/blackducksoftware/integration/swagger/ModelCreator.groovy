@@ -3,9 +3,9 @@ package com.blackducksoftware.integration.swagger;
 import java.nio.charset.StandardCharsets;
 
 import com.blackducksoftware.integration.swagger.model.SwaggerDefinition
-import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitions
-import com.blackducksoftware.integration.swagger.parser.SwaggerEnums
-import com.blackducksoftware.integration.swagger.parser.SwaggerProperties
+import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitionsParser
+import com.blackducksoftware.integration.swagger.parser.SwaggerEnumsParser
+import com.blackducksoftware.integration.swagger.parser.SwaggerPropertiesParser
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -18,10 +18,6 @@ public class ModelCreator {
     public static final String VIEW_DIRECTORY = "/com/blackducksoftware/integration/hub/model/view";
     public static final String ENUM_PACKAGE = "com.blackducksoftware.integration.hub.model.enumeration";
     public static final String VIEW_PACKAGE = "com.blackducksoftware.integration.hub.model.view";
-    public static final List<String> KNOWN_TYPES_MANUALLY_CREATED = [
-        'NameValuePairView',
-        'ComponentHit'
-    ]
 
     public static void main(final String[] args) throws Exception {
         final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.4.0.json").toURI());
@@ -31,16 +27,15 @@ public class ModelCreator {
         final JsonParser jsonParser = new JsonParser();
         final JsonObject swaggerJson = jsonParser.parse(jsonInputStreamReader).getAsJsonObject();
 
-        final SwaggerEnums swaggerEnums = new SwaggerEnums()
-        final SwaggerProperties swaggerProperties = new SwaggerProperties(swaggerEnums)
-        final SwaggerDefinitions swaggerDefinitions = new SwaggerDefinitions(swaggerProperties);
-        final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitions.getDefinitionsFromJson(swaggerJson)
+        final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser()
+        final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser)
+        final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
+        final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getDefinitionsFromJson(swaggerJson)
 
-        logPossibleErrors(swaggerDefinitions, swaggerProperties, allObjectDefinitions);
+        logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
         Set<String> possibleReferencesForProperties = new HashSet<>();
-        possibleReferencesForProperties.addAll(swaggerEnums.enumNameToValues.keySet());
         possibleReferencesForProperties.addAll(allObjectDefinitions.keySet());
-        possibleReferencesForProperties.addAll(KNOWN_TYPES_MANUALLY_CREATED)
+        possibleReferencesForProperties.addAll(SwaggerDefinitionsParser.DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY);
 
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(ModelCreator.class, "/");
@@ -52,7 +47,7 @@ public class ModelCreator {
         File viewBaseDirectory = new File(ModelCreator.BASE_DIRECTORY + ModelCreator.VIEW_DIRECTORY);
         enumBaseDirectory.mkdirs();
         viewBaseDirectory.mkdirs();
-        createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnums.enumNameToValues);
+        createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.enumNameToValues);
         createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties);
     }
 
@@ -95,27 +90,27 @@ public class ModelCreator {
         }
     }
 
-    public static logPossibleErrors(SwaggerDefinitions swaggerDefinitions, SwaggerProperties swaggerProperties, Map<String, SwaggerDefinition> allObjectDefinitions) {
-        println "Unknown definitions (possible problems) (${swaggerDefinitions.unknownDefinitionNames.size()}):"
-        swaggerDefinitions.unknownDefinitionNames.toSorted { a, b ->
+    public static logPossibleErrors(SwaggerDefinitionsParser swaggerDefinitionsParser, SwaggerPropertiesParser swaggerPropertiesParser, Map<String, SwaggerDefinition> allObjectDefinitions) {
+        println "Unknown definitions (possible problems) (${swaggerDefinitionsParser.unknownDefinitionNames.size()}):"
+        swaggerDefinitionsParser.unknownDefinitionNames.toSorted { a, b ->
             a <=> b
         }.each { println it }
         println '---------------------------------------'
 
-        println "Unknown property fields (possible problems) (${swaggerProperties.unknownPropertyFields.size()}):"
-        swaggerProperties.unknownPropertyFields.toSorted { a, b ->
+        println "Unknown property fields (possible problems) (${swaggerPropertiesParser.unknownPropertyFields.size()}):"
+        swaggerPropertiesParser.unknownPropertyFields.toSorted { a, b ->
             a <=> b
         }.each { println it }
         println '---------------------------------------'
 
-        println "Found definitions (${swaggerDefinitions.definitionNames.size()}):"
-        swaggerDefinitions.definitionNames.toSorted { a, b ->
+        println "Found definitions (${swaggerDefinitionsParser.allProcessedDefintionNames.size()}):"
+        swaggerDefinitionsParser.allProcessedDefintionNames.toSorted { a, b ->
             a <=> b
         }.each { println it }
         println '---------------------------------------'
 
         println "Found types/formats:"
-        swaggerProperties.propertyTypeToFormats.each { k, v ->
+        swaggerPropertiesParser.propertyTypeToFormats.each { k, v ->
             println "${k}: formats(${v.join(', ')})"
         }
         println '---------------------------------------'

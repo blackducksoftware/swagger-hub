@@ -28,27 +28,26 @@ import com.blackducksoftware.integration.swagger.model.SwaggerDefinitionProperty
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class SwaggerDefinitions {
-    public static final String containerStartDefinitionMarker = '\u00ab'
-    public static final String containerEndDefinitionMarker = '\u00bb'
-
-    private static final List<String> knownDefinitionsToIgnore = [
+public class SwaggerDefinitionsParser {
+    public static final String CONTAINER_START_MARKER = '\u00ab'
+    public static final String CONTAINER_END_MARKER = '\u00bb'
+    public static final List<String> DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY = [
         'boolean',
         'string',
         'DateTime',
         'VersionRiskProfileView',
         'string,RiskPriorityDistribution',
-        'NameValuePairView',
-        'ComponentHit'
+        'Request to create a custom license',
+        'vulnerability remediation report request'
     ]
 
-    private final SwaggerProperties swaggerProperties
+    private final SwaggerPropertiesParser swaggerPropertiesParser
 
-    def namesDefinedElsewhere = new HashSet<String>();
-    def definitionNames = new HashSet<String>();
+    def definitionNamesReferencedButNotProcessed = new HashSet<String>();
+    def allProcessedDefintionNames = new HashSet<String>();
 
-    public SwaggerDefinitions(SwaggerProperties swaggerProperties) {
-        this.swaggerProperties = swaggerProperties
+    public SwaggerDefinitionsParser(SwaggerPropertiesParser swaggerPropertiesParser) {
+        this.swaggerPropertiesParser = swaggerPropertiesParser
     }
 
     public Map<String, SwaggerDefinition> getDefinitionsFromJson(final JsonObject swaggerJson) {
@@ -60,9 +59,9 @@ public class SwaggerDefinitions {
                 final JsonObject definitionJsonObject = entry.getValue().getAsJsonObject();
                 String name = entry.getKey()
                 if (shouldProcessDefinition(name)) {
-                    List<SwaggerDefinitionProperty> swaggerDefinitionProperties = swaggerProperties.getPropertiesFromJson(name, definitionJsonObject)
+                    List<SwaggerDefinitionProperty> swaggerDefinitionProperties = swaggerPropertiesParser.getPropertiesFromJson(name, definitionJsonObject)
                     if (swaggerDefinitionProperties.size() > 0) {
-                        definitionNames.add(name)
+                        allProcessedDefintionNames.add(name)
                         def swaggerDefinition = new SwaggerDefinition();
                         swaggerDefinition.definitionName = name
                         swaggerDefinition.definitionProperties = swaggerDefinitionProperties
@@ -75,23 +74,24 @@ public class SwaggerDefinitions {
     }
 
     public Set<String> getUnknownDefinitionNames() {
-        def unknownNames = namesDefinedElsewhere.findAll {
-            !definitionNames.contains(it)
+        def unknownNames = definitionNamesReferencedButNotProcessed.findAll {
+            !allProcessedDefintionNames.contains(it)
         }
         new HashSet<>(unknownNames)
     }
 
     public boolean shouldProcessDefinition(String name) {
-        //definitions containing \u00ab and \u00bb () reference a definition that should be defined elsewhere
-        if (name.contains(containerStartDefinitionMarker) || name.contains(containerEndDefinitionMarker)) {
-            int start = name.lastIndexOf(containerStartDefinitionMarker) + 1
-            int end = name.indexOf(containerEndDefinitionMarker) - 1
+        //definitions with CONTAINER_START_MARKER and CONTAINER_END_MARKER reference a definition that should be defined elsewhere
+        if (name.contains(CONTAINER_START_MARKER) && name.contains(CONTAINER_END_MARKER)) {
+            int start = name.lastIndexOf(CONTAINER_START_MARKER) + 1
+            int end = name.indexOf(CONTAINER_END_MARKER) - 1
             String nameThatShouldBeDefinedElsewhere = name[start..end]
-            if (!knownDefinitionsToIgnore.contains(nameThatShouldBeDefinedElsewhere)) {
-                namesDefinedElsewhere.add(nameThatShouldBeDefinedElsewhere)
+            if (!DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY.contains(nameThatShouldBeDefinedElsewhere)) {
+                //this definition won't be processed, but it creates a requirement on 'nameThatShouldBeDefinedElsewhere' to be processed
+                definitionNamesReferencedButNotProcessed.add(nameThatShouldBeDefinedElsewhere)
             }
             return false
-        } else if (knownDefinitionsToIgnore.contains(name)) {
+        } else if (DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY.contains(name)) {
             return false
         }
 

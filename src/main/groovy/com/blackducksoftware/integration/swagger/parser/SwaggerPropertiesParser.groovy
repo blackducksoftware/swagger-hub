@@ -4,7 +4,7 @@ import com.blackducksoftware.integration.swagger.model.SwaggerDefinitionProperty
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
-class SwaggerProperties {
+class SwaggerPropertiesParser {
     private static final List<String> knownPropertyFields = [
         'format',
         'type',
@@ -15,13 +15,13 @@ class SwaggerProperties {
         '$ref'
     ]
 
-    private final SwaggerEnums swaggerEnums
+    private final SwaggerEnumsParser swaggerEnumsParser
 
     def propertyTypeToFormats = new HashMap<String, Set<String>>()
     def unknownPropertyFields = new HashSet<String>()
 
-    public SwaggerProperties(SwaggerEnums swaggerEnums) {
-        this.swaggerEnums = swaggerEnums
+    public SwaggerPropertiesParser(SwaggerEnumsParser swaggerEnumsParser) {
+        this.swaggerEnumsParser = swaggerEnumsParser
     }
 
     public List<SwaggerDefinitionProperty> getPropertiesFromJson(String definitionName, final JsonObject definitionJsonObject) {
@@ -37,7 +37,7 @@ class SwaggerProperties {
                 SwaggerDefinitionProperty swaggerDefinitionProperty = new SwaggerDefinitionProperty()
                 swaggerDefinitionProperty.name = propertyName
                 populatePropertyFields(swaggerDefinitionProperty, propertyJsonObject)
-                swaggerEnums.populateEnumField(swaggerDefinitionProperty, definitionName, propertyName, propertyJsonObject)
+                swaggerEnumsParser.populateEnumField(swaggerDefinitionProperty, definitionName, propertyName, propertyJsonObject)
                 if (!propertyTypeToFormats.containsKey(swaggerDefinitionProperty.propertyType)) {
                     propertyTypeToFormats.put(swaggerDefinitionProperty.propertyType, new HashSet<>())
                 }

@@ -35,8 +35,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class SwaggerEnums {
-    private final Map<String, List<String>> enumNameToValues = new HashMap<>();
+public class SwaggerEnumsParser {
+    public final Map<String, List<String>> enumNameToValues = new HashMap<>();
 
     public void populateEnumField(final SwaggerDefinitionProperty swaggerDefinitionProperty, final String definitionName, final String propertyName, final JsonObject propertyJsonObject) {
         final List<String> enumValues = getValues(propertyJsonObject);

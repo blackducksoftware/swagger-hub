@@ -5,7 +5,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import com.blackducksoftware.integration.swagger.ModelCreator;
-import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitions;
+import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitionsParser;
 import com.blackducksoftware.integration.util.Stringable;
 import com.google.gson.JsonObject;
 
@@ -16,12 +16,12 @@ import com.google.gson.JsonObject;
  * 3) enumType - this is when the property represents an enum value
  */
 public class SwaggerDefinitionProperty extends Stringable {
-    private static final String OPTIONAL_START = "Optional" + SwaggerDefinitions.containerStartDefinitionMarker;
-    private static final String OPTIONAL_END = SwaggerDefinitions.containerEndDefinitionMarker;
-    private static final String COLLECTION_START = "Collection" + SwaggerDefinitions.containerStartDefinitionMarker;
-    private static final String COLLECTION_END = SwaggerDefinitions.containerEndDefinitionMarker;
-    private static final String LIST_START = "List" + SwaggerDefinitions.containerStartDefinitionMarker;
-    private static final String LIST_END = SwaggerDefinitions.containerEndDefinitionMarker;
+    private static final String OPTIONAL_START = "Optional" + SwaggerDefinitionsParser.CONTAINER_START_MARKER;
+    private static final String OPTIONAL_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
+    private static final String COLLECTION_START = "Collection" + SwaggerDefinitionsParser.CONTAINER_START_MARKER;
+    private static final String COLLECTION_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
+    private static final String LIST_START = "List" + SwaggerDefinitionsParser.CONTAINER_START_MARKER;
+    private static final String LIST_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
 
     public String name;
     public String description;
@@ -87,6 +87,9 @@ public class SwaggerDefinitionProperty extends Stringable {
     }
 
     private String convertSwaggerPrimitiveToJava(final String swaggerPrimitive) throws Exception {
+        if ("object".equals(swaggerPrimitive) && format == null) {
+            return "String";
+        }
         if ("number".equals(swaggerPrimitive) && "double".equals(format)) {
             return "java.math.BigDecimal";
         } else if ("integer".equals(swaggerPrimitive) && "int32".equals(format)) {
