@@ -2,6 +2,8 @@
 # definition name, link label, flag for multiple results, result class
 ###
 
+CodeLocationView,scans,true,String
+
 ComponentVersionView,references,true,ComponentVersionReferenceView
 ComponentVersionView,component,false,ComponentView
 ComponentVersionView,origins,true,OriginView
