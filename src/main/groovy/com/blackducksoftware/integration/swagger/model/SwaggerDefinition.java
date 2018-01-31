@@ -27,9 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.blackducksoftware.integration.util.Stringable;
+import com.google.gson.JsonObject;
 
 public class SwaggerDefinition extends Stringable {
     public String definitionName;
     public List<SwaggerDefinitionProperty> definitionProperties = new ArrayList<>();
+    public JsonObject definitionJsonObject;
 
 }

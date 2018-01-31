@@ -35,7 +35,6 @@ public class SwaggerDefinitionsParser {
         'boolean',
         'string',
         'DateTime',
-        'VersionRiskProfileView',
         'string,RiskPriorityDistribution',
         'Request to create a custom license',
         'vulnerability remediation report request'
@@ -65,6 +64,7 @@ public class SwaggerDefinitionsParser {
                         def swaggerDefinition = new SwaggerDefinition();
                         swaggerDefinition.definitionName = name
                         swaggerDefinition.definitionProperties = swaggerDefinitionProperties
+                        swaggerDefinition.definitionJsonObject = definitionJsonObject
                         swaggerDefinitions.put(name, swaggerDefinition);
                     }
                 }

@@ -89,8 +89,7 @@ public class SwaggerDefinitionProperty extends Stringable {
     private String convertSwaggerPrimitiveToJava(final String swaggerPrimitive) throws Exception {
         if ("object".equals(swaggerPrimitive) && format == null) {
             return "String";
-        }
-        if ("number".equals(swaggerPrimitive) && "double".equals(format)) {
+        } else if ("number".equals(swaggerPrimitive) && "double".equals(format)) {
             return "java.math.BigDecimal";
         } else if ("integer".equals(swaggerPrimitive) && "int32".equals(format)) {
             return "Integer";

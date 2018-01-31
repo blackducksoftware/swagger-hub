@@ -1,0 +1,24 @@
+###
+# definition name, link label, flag for multiple results, result class
+###
+
+NotificationUserView,notifications,false,NotificationUserView
+
+ProjectView,versions,true,ProjectVersionView
+ProjectView,canonicalVersion,false,ProjectVersionView
+ProjectView,users,true,AssignedUserView
+
+ProjectVersionView,riskProfile,false,VersionRiskProfileView
+ProjectVersionView,components,true,VersionBomComponentView
+ProjectVersionView,vulnerable-components,true,VulnerableComponentView
+ProjectVersionView,project,false,ProjectView
+ProjectVersionView,policy-status,false,VersionBomPolicyStatusView
+ProjectVersionView,codelocations,true,CodeLocationView
+
+RoleAssignmentView,user,false,UserView
+
+UserView,roles,true,RoleAssignmentView
+UserView,notifications,true,NotificationUserView
+UserView,projects,true,AssignedProjectView
+
+VersionRiskProfileView,version,false,ProjectVersionView
