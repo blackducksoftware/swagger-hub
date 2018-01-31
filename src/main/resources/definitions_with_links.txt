@@ -2,11 +2,20 @@
 # definition name, link label, flag for multiple results, result class
 ###
 
+ComponentVersionView,references,true,ComponentVersionReferenceView
+ComponentVersionView,component,false,ComponentView
+ComponentVersionView,origins,true,OriginView
+ComponentVersionView,vulnerabilities,true,VulnerabilityV2View
+ComponentVersionView,risk-profile,false,ComponentVersionRiskView
+
+LicenseView,text,false,String
+
 NotificationUserView,notifications,false,NotificationUserView
 
 ProjectView,versions,true,ProjectVersionView
 ProjectView,canonicalVersion,false,ProjectVersionView
 ProjectView,users,true,AssignedUserView
+ProjectView,usergroups,true,AssignedUserGroupView
 
 ProjectVersionView,riskProfile,false,VersionRiskProfileView
 ProjectVersionView,components,true,VersionBomComponentView
@@ -17,8 +26,18 @@ ProjectVersionView,codelocations,true,CodeLocationView
 
 RoleAssignmentView,user,false,UserView
 
+RoleView,role-users,true,UserView
+RoleView,inherited-role-users,true,UserView
+
 UserView,roles,true,RoleAssignmentView
 UserView,notifications,true,NotificationUserView
 UserView,projects,true,AssignedProjectView
+UserView,inherited-roles,true,RoleAssignmentView
+
+VersionBomComponentView,comments,true,UserCommentView
+VersionBomComponentView,component-issues,false,IssueView
+VersionBomComponentView,policy-rules,true,PolicyRuleViewV2
+VersionBomComponentView,vulnerabilities,true,VulnerabilityV2View
+VersionBomComponentView,matched-files,true,MatchedFileView
 
 VersionRiskProfileView,version,false,ProjectVersionView
