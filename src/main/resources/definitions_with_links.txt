@@ -36,6 +36,10 @@ UserView,notifications,true,NotificationUserView
 UserView,projects,true,AssignedProjectView
 UserView,inherited-roles,true,RoleAssignmentView
 
+UserGroupView,users,true,UserView
+UserGroupView,projects,true,AssignedProjectView
+UserGroupView,roles,true,RoleAssignmentView
+
 VersionBomComponentView,comments,true,UserCommentView
 VersionBomComponentView,component-issues,false,IssueView
 VersionBomComponentView,policy-rules,true,PolicyRuleViewV2
