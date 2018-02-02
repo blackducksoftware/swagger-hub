@@ -1,4 +1,4 @@
-/**
+/*
  * swagger-hub
  *
  * Copyright (C) 2018 Black Duck Software, Inc.
