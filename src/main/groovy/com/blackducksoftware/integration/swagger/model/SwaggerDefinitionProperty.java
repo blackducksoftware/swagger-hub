@@ -4,7 +4,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.blackducksoftware.integration.swagger.ModelCreator;
 import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitionsParser;
 import com.blackducksoftware.integration.util.Stringable;
 import com.google.gson.JsonObject;
@@ -37,7 +36,7 @@ public class SwaggerDefinitionProperty extends Stringable {
 
     public String getFullyQualifiedClassName(final Set<String> possibleReferencesForProperties) throws Exception {
         if (StringUtils.isNotBlank(enumType)) {
-            return ModelCreator.ENUM_PACKAGE + "." + enumType;
+            return enumType;
         } else if (StringUtils.isNotBlank(ref)) {
             String reference = ref.replace("#/definitions/", "");
             if (reference.startsWith(OPTIONAL_START)) {

@@ -4,14 +4,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import com.blackducksoftware.integration.swagger.ModelCreator;
 
 public class DefinitionLinks {
     private final Map<String, List<DefinitionLinkEntry>> namesToEntries = new HashMap<>();
     private final Map<String, Map<String, String>> namesToLinksToJavaConstants = new HashMap<>();
     private final Map<String, Map<String, Boolean>> namesToLinksToHasManyResults = new HashMap<>();
     private final Map<String, Map<String, String>> namesToLinksToResultClasses = new HashMap<>();
+    private final Map<String, String> namesToFullyQualifiedClassNames = new HashMap<>();
 
-    public DefinitionLinks(final List<DefinitionLinkEntry> linkEntries) {
+    public DefinitionLinks(final List<DefinitionLinkEntry> linkEntries, final Set<String> allDefinitionNames, final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse,
+            final Set<String> enumNames) {
         linkEntries.forEach(linkEntry -> {
             final String definitionName = linkEntry.getDefinitionName();
 
@@ -38,6 +43,19 @@ public class DefinitionLinks {
             final String resultClass = linkEntry.getResultClass();
             namesToLinksToResultClasses.get(definitionName).put(link, resultClass);
         });
+
+        allDefinitionNames.forEach(definitionName -> {
+            if (definitionNamesToExtendHubView.contains(definitionName)) {
+                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.VIEW_PACKAGE, definitionName));
+            } else if (definitionNamesToExtendHubResponse.contains(definitionName)) {
+                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.RESPONSE_PACKAGE, definitionName));
+            } else {
+                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.MODEL_PACKAGE, definitionName));
+            }
+        });
+        enumNames.forEach(enumName -> {
+            namesToFullyQualifiedClassNames.put(enumName, String.format("%s.%s", ModelCreator.ENUM_PACKAGE, enumName));
+        });
     }
 
     public Map<String, String> getLinksToJavaConstants(final String definitionName) {
@@ -50,6 +68,10 @@ public class DefinitionLinks {
 
     public String getResultClass(final String definitionName, final String link) {
         return namesToLinksToResultClasses.get(definitionName).get(link);
+    }
+
+    public String getFullyQualifiedClassName(final String name) {
+        return namesToFullyQualifiedClassNames.get(name);
     }
 
     private String convertLinkToJavaConstant(final String link) {

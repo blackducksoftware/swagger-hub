@@ -2,6 +2,8 @@ package com.blackducksoftware.integration.swagger;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.lang3.StringUtils
+
 import com.blackducksoftware.integration.swagger.model.ApiPath
 import com.blackducksoftware.integration.swagger.model.DefinitionLinkEntry
 import com.blackducksoftware.integration.swagger.model.DefinitionLinks
@@ -19,12 +21,20 @@ import freemarker.template.Template
 public class ModelCreator {
     public static final String BASE_DIRECTORY_ENVIRONMENT_VARIABLE = "SWAGGER_HUB_BASE_DIRECTORY";
     public static final String DEFAULT_BASE_DIRECTORY = "/tmp";
-    public static final String DISCOVERY_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/api/discovery";
-    public static final String ENUM_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/api/enumeration";
-    public static final String VIEW_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/api/view";
-    public static final String DISCOVERY_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.api.discovery";
-    public static final String ENUM_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.api.enumeration";
-    public static final String VIEW_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.api.view";
+
+    public static final String DIRECTORY_PREFIX = "/com/blackducksoftware/integration/hub/api/generated";
+    public static final String DISCOVERY_DIRECTORY = DIRECTORY_PREFIX + "/discovery";
+    public static final String ENUM_DIRECTORY = DIRECTORY_PREFIX + "/enumeration";
+    public static final String VIEW_DIRECTORY = DIRECTORY_PREFIX + "/view";
+    public static final String RESPONSE_DIRECTORY = DIRECTORY_PREFIX + "/response";
+    public static final String MODEL_DIRECTORY = DIRECTORY_PREFIX + "/model";
+
+    public static final String PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.generated";
+    public static final String DISCOVERY_PACKAGE = PACKAGE_PREFIX + ".discovery";
+    public static final String ENUM_PACKAGE = PACKAGE_PREFIX + ".enumeration";
+    public static final String VIEW_PACKAGE = PACKAGE_PREFIX + ".view";
+    public static final String RESPONSE_PACKAGE = PACKAGE_PREFIX + ".response";
+    public static final String MODEL_PACKAGE = PACKAGE_PREFIX + ".model";
 
     public static void main(final String[] args) throws Exception {
         final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.4.0.json").toURI());
@@ -34,9 +44,13 @@ public class ModelCreator {
         final JsonParser jsonParser = new JsonParser();
         final JsonObject swaggerJson = jsonParser.parse(jsonInputStreamReader).getAsJsonObject();
 
-        final File definitionsWithMetaFile = new File(ModelCreator.class.getClassLoader().getResource("definitions_with_meta_in_response.txt").toURI());
-        List<String> definitionLines = definitionsWithMetaFile.readLines()
-        Set<String> definitionNamesToExtendHubView = new HashSet<>(definitionLines);
+        final File definitionsThatAreHubViews = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_hub_views.txt").toURI());
+        List<String> definitionThatAreHubViewsLines = definitionsThatAreHubViews.readLines()
+        Set<String> definitionNamesToExtendHubView = new HashSet<>(definitionThatAreHubViewsLines);
+
+        final File definitionsThatAreHubResponses = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_hub_responses.txt").toURI());
+        List<String> definitionThatAreHubResponsesLines = definitionsThatAreHubResponses.readLines()
+        Set<String> definitionNamesToExtendHubResponse = new HashSet<>(definitionThatAreHubResponsesLines);
 
         final File definitionsWithLinksFile = new File(ModelCreator.class.getClassLoader().getResource("definitions_with_links.txt").toURI());
         List<DefinitionLinkEntry> linkEntries = []
@@ -54,16 +68,16 @@ public class ModelCreator {
             }
         }
 
-        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries)
         final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser()
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser)
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
         final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getDefinitionsFromJson(swaggerJson)
+        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, swaggerEnumsParser.enumNameToValues.keySet())
 
         final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
         final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson);
 
-        //logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
+        logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
 
         Set<String> possibleReferencesForProperties = new HashSet<>();
         possibleReferencesForProperties.addAll(allObjectDefinitions.keySet());
@@ -84,7 +98,7 @@ public class ModelCreator {
         viewBaseDirectory.mkdirs();
         createDiscoveryFile(discoveryBaseDirectory, discoveryTemplate, apiPaths)
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.enumNameToValues);
-        createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionLinks);
+        createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, definitionLinks);
     }
 
     public static File getBaseDirectory() {
@@ -95,7 +109,7 @@ public class ModelCreator {
         return new File(baseDirectory);
     }
 
-    public static void createDiscoveryFile(File baseDirectory, Template template, List<ApiPath> apiPaths) {
+    public static void createDiscoveryFile(File baseDirectory, Template template, List<ApiPath> apiPaths, DefinitionLinks definitionLinks) {
         File discoveryFile = new File(baseDirectory, "ApiDiscovery.java");
 
         final Map<String, Object> model = new HashMap<>();
@@ -106,7 +120,8 @@ public class ModelCreator {
         model.put("links", links)
 
         apiPaths.each {
-            imports.add(ModelCreator.VIEW_PACKAGE + "." + it.resultClass);
+            String importPackage = definitionLinks.getFullyQualifiedClassName(it.resultClass);
+            imports.add(importPackage);
 
             Map<String, Object> linkModel = new HashMap<>();
             linkModel.put("label", it.path);
@@ -140,7 +155,7 @@ public class ModelCreator {
         }
     }
 
-    public static void createViewFiles(File baseDirectory, Template template, List<SwaggerDefinition> swaggerDefinitions, Set<String> possibleReferencesForProperties, Set<String> definitionNamesToExtendHubView, DefinitionLinks definitionLinks) {
+    public static void createViewFiles(File baseDirectory, Template template, List<SwaggerDefinition> swaggerDefinitions, Set<String> possibleReferencesForProperties, final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse, DefinitionLinks definitionLinks) {
         swaggerDefinitions.each {
             try {
                 File viewFile = new File(baseDirectory, it.definitionName + ".java");
@@ -150,9 +165,13 @@ public class ModelCreator {
                 model.put("className", it.definitionName);
                 if (definitionNamesToExtendHubView.contains(it.definitionName)) {
                     model.put("baseClass", "HubView");
+                } else if (definitionNamesToExtendHubResponse.contains(it.definitionName)) {
+                    model.put("baseClass", "HubResponse");
                 } else {
                     model.put("baseClass", "HubModel");
                 }
+
+                Set imports = new HashSet<>()
 
                 Map<String, String> definitionLinksToConstants = definitionLinks.getLinksToJavaConstants(it.definitionName)
                 if (definitionLinksToConstants != null && !definitionLinksToConstants.empty) {
@@ -163,6 +182,9 @@ public class ModelCreator {
                         Map<String, Object> linkModel = new HashMap<>();
                         linkModel.put("label", link);
                         linkModel.put("javaConstant", constant);
+
+                        String importPackage = definitionLinks.getFullyQualifiedClassName(it.definitionName);
+                        imports.add(importPackage);
                         linkModel.put("resultClass", definitionLinks.getResultClass(it.definitionName, link));
                         if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
                             linkModel.put("hasMultipleResults", true);
@@ -178,9 +200,19 @@ public class ModelCreator {
                 it.definitionProperties.each { property ->
                     Map<String, Object> propertyModel = new HashMap<>();
                     propertyModel.put("name", property.name);
-                    propertyModel.put("type", property.getFullyQualifiedClassName(possibleReferencesForProperties));
+                    String propertyType = property.getFullyQualifiedClassName(possibleReferencesForProperties);
+                    String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
+                    if (StringUtils.isNotBlank(importPackage)) {
+                        imports.add(importPackage);
+                    }
+                    propertyModel.put("type", propertyType);
                     fields.add(propertyModel)
                 }
+
+                List sortedImports = new ArrayList<>(imports);
+                Collections.sort(sortedImports);
+                model.put("imports", sortedImports)
+
                 final FileWriter fileWriter = new FileWriter(viewFile);
                 template.process(model, fileWriter);
             } catch (Exception e) {
