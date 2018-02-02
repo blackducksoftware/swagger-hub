@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 </#if>
-import com.blackducksoftware.integration.hub.model.${baseClass};
+<#list imports as import>
+import ${import};
+</#list>
 <#if hasLinks?? && hasMultipleResultsLink??>
 import com.google.gson.reflect.TypeToken;
 </#if>

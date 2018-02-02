@@ -52,12 +52,13 @@ public class ModelCreator {
     public static final String RESPONSE_DIRECTORY = DIRECTORY_PREFIX + "/response";
     public static final String MODEL_DIRECTORY = DIRECTORY_PREFIX + "/model";
 
-    public static final String PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.generated";
-    public static final String DISCOVERY_PACKAGE = PACKAGE_PREFIX + ".discovery";
-    public static final String ENUM_PACKAGE = PACKAGE_PREFIX + ".enumeration";
-    public static final String VIEW_PACKAGE = PACKAGE_PREFIX + ".view";
-    public static final String RESPONSE_PACKAGE = PACKAGE_PREFIX + ".response";
-    public static final String MODEL_PACKAGE = PACKAGE_PREFIX + ".model";
+    public static final String API_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api";
+    public static final String GENERATED_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.generated";
+    public static final String DISCOVERY_PACKAGE = GENERATED_PACKAGE_PREFIX + ".discovery";
+    public static final String ENUM_PACKAGE = GENERATED_PACKAGE_PREFIX + ".enumeration";
+    public static final String VIEW_PACKAGE = GENERATED_PACKAGE_PREFIX + ".view";
+    public static final String RESPONSE_PACKAGE = GENERATED_PACKAGE_PREFIX + ".response";
+    public static final String MODEL_PACKAGE = GENERATED_PACKAGE_PREFIX + ".model";
 
     public static void main(final String[] args) throws Exception {
         final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.4.0.json").toURI());
@@ -95,7 +96,8 @@ public class ModelCreator {
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser)
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
         final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getDefinitionsFromJson(swaggerJson)
-        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, swaggerEnumsParser.enumNameToValues.keySet())
+        println allObjectDefinitions.keySet().size()
+        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, swaggerEnumsParser.enumNameToValues.keySet())
 
         final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
         final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson);
@@ -116,12 +118,16 @@ public class ModelCreator {
         File discoveryBaseDirectory = new File(getBaseDirectory(), ModelCreator.DISCOVERY_DIRECTORY);
         File enumBaseDirectory = new File(getBaseDirectory(), ModelCreator.ENUM_DIRECTORY);
         File viewBaseDirectory = new File(getBaseDirectory(), ModelCreator.VIEW_DIRECTORY);
+        File responseBaseDirectory = new File(getBaseDirectory(), ModelCreator.RESPONSE_DIRECTORY);
+        File modelBaseDirectory = new File(getBaseDirectory(), ModelCreator.MODEL_DIRECTORY);
         discoveryBaseDirectory.mkdirs();
         enumBaseDirectory.mkdirs();
         viewBaseDirectory.mkdirs();
-        createDiscoveryFile(discoveryBaseDirectory, discoveryTemplate, apiPaths)
+        responseBaseDirectory.mkdirs();
+        modelBaseDirectory.mkdirs();
+        createDiscoveryFile(discoveryBaseDirectory, discoveryTemplate, apiPaths, definitionLinks)
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.enumNameToValues);
-        createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, definitionLinks);
+        createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, definitionLinks);
     }
 
     public static File getBaseDirectory() {
@@ -181,20 +187,33 @@ public class ModelCreator {
     public static void createViewFiles(File baseDirectory, Template template, List<SwaggerDefinition> swaggerDefinitions, Set<String> possibleReferencesForProperties, final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse, DefinitionLinks definitionLinks) {
         swaggerDefinitions.each {
             try {
-                File viewFile = new File(baseDirectory, it.definitionName + ".java");
-
-                final Map<String, Object> model = new HashMap<>();
-                model.put("viewPackage", ModelCreator.VIEW_PACKAGE)
-                model.put("className", it.definitionName);
-                if (definitionNamesToExtendHubView.contains(it.definitionName)) {
-                    model.put("baseClass", "HubView");
-                } else if (definitionNamesToExtendHubResponse.contains(it.definitionName)) {
-                    model.put("baseClass", "HubResponse");
-                } else {
-                    model.put("baseClass", "HubModel");
+                File viewFile = baseDirectory
+                if (it.definitionName == 'RiskProfileView') {
+                    println 'gotham'
                 }
 
+                final Map<String, Object> model = new HashMap<>();
+                model.put("className", it.definitionName);
+
                 Set imports = new HashSet<>()
+
+                if (definitionNamesToExtendHubView.contains(it.definitionName)) {
+                    model.put("viewPackage", ModelCreator.VIEW_PACKAGE)
+                    model.put("baseClass", "HubView");
+                    imports.add(ModelCreator.API_PACKAGE_PREFIX + "." + "HubView");
+                    viewFile = new File(viewFile, ModelCreator.VIEW_DIRECTORY);
+                } else if (definitionNamesToExtendHubResponse.contains(it.definitionName)) {
+                    model.put("viewPackage", ModelCreator.RESPONSE_PACKAGE)
+                    model.put("baseClass", "HubResponse");
+                    imports.add(ModelCreator.API_PACKAGE_PREFIX + "." + "HubResponse");
+                    viewFile = new File(viewFile, ModelCreator.RESPONSE_DIRECTORY);
+                } else {
+                    model.put("viewPackage", ModelCreator.MODEL_PACKAGE)
+                    model.put("baseClass", "HubModel");
+                    imports.add(ModelCreator.API_PACKAGE_PREFIX + "." + "HubModel");
+                    viewFile = new File(viewFile, ModelCreator.MODEL_DIRECTORY);
+                }
+                viewFile = new File(viewFile, it.definitionName + ".java");
 
                 Map<String, String> definitionLinksToConstants = definitionLinks.getLinksToJavaConstants(it.definitionName)
                 if (definitionLinksToConstants != null && !definitionLinksToConstants.empty) {
@@ -206,9 +225,12 @@ public class ModelCreator {
                         linkModel.put("label", link);
                         linkModel.put("javaConstant", constant);
 
-                        String importPackage = definitionLinks.getFullyQualifiedClassName(it.definitionName);
-                        imports.add(importPackage);
-                        linkModel.put("resultClass", definitionLinks.getResultClass(it.definitionName, link));
+                        String resultClass = definitionLinks.getResultClass(it.definitionName, link)
+                        String importPackage = definitionLinks.getFullyQualifiedClassName(resultClass);
+                        if (StringUtils.isNotBlank(importPackage)) {
+                            imports.add(importPackage);
+                        }
+                        linkModel.put("resultClass", resultClass);
                         if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
                             linkModel.put("hasMultipleResults", true);
                             model.put('hasMultipleResultsLink', true);
@@ -223,7 +245,7 @@ public class ModelCreator {
                 it.definitionProperties.each { property ->
                     Map<String, Object> propertyModel = new HashMap<>();
                     propertyModel.put("name", property.name);
-                    String propertyType = property.getFullyQualifiedClassName(possibleReferencesForProperties);
+                    String propertyType = property.getFullyQualifiedClassName(imports, definitionLinks, possibleReferencesForProperties);
                     String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
                     if (StringUtils.isNotBlank(importPackage)) {
                         imports.add(importPackage);

@@ -57,7 +57,7 @@ public class SwaggerDefinitionProperty extends Stringable {
     public String enumType;
     public JsonObject propertyJsonObject;
 
-    public String getFullyQualifiedClassName(final Set<String> possibleReferencesForProperties) throws Exception {
+    public String getFullyQualifiedClassName(final Set<String> importPackages, final DefinitionLinks definitionLinks, final Set<String> possibleReferencesForProperties) throws Exception {
         if (StringUtils.isNotBlank(enumType)) {
             return enumType;
         } else if (StringUtils.isNotBlank(ref)) {
@@ -86,11 +86,19 @@ public class SwaggerDefinitionProperty extends Stringable {
             if (!possibleReferencesForProperties.contains(reference)) {
                 throw new Exception("Not a known java type: " + reference + " in " + toString());
             }
+            final String importPackage = definitionLinks.getFullyQualifiedClassName(reference);
+            if (StringUtils.isNotBlank(importPackage)) {
+                importPackages.add(importPackage);
+            }
             return isList ? String.format("java.util.List<%s>", reference) : reference;
         } else if ("array".equals(propertyType) && propertyJsonObject.has("items") && propertyJsonObject.getAsJsonObject("items").has("$ref")) {
             final String javaType = propertyJsonObject.getAsJsonObject("items").get("$ref").getAsString().replace("#/definitions/", "");
             if (!possibleReferencesForProperties.contains(javaType)) {
                 throw new Exception("Not a known java type: " + javaType + " in " + toString());
+            }
+            final String importPackage = definitionLinks.getFullyQualifiedClassName(javaType);
+            if (StringUtils.isNotBlank(importPackage)) {
+                importPackages.add(importPackage);
             }
             return String.format("java.util.List<%s>", javaType);
         } else if ("array".equals(propertyType) && propertyJsonObject.has("items") && propertyJsonObject.getAsJsonObject("items").has("type")) {
