@@ -10,7 +10,11 @@ ComponentVersionView,origins,true,OriginView
 ComponentVersionView,vulnerabilities,true,VulnerabilityV2View
 ComponentVersionView,risk-profile,false,ComponentVersionRiskView
 
+CweView,sources
+
 LicenseView,text,false,String
+
+MatchedFileView,codelocations,false,CodeLocationView
 
 NotificationUserView,notifications,false,NotificationUserView
 
@@ -25,6 +29,11 @@ ProjectVersionView,vulnerable-components,true,VulnerableComponentView
 ProjectVersionView,project,false,ProjectView
 ProjectVersionView,policy-status,false,VersionBomPolicyStatusView
 ProjectVersionView,codelocations,true,CodeLocationView
+ProjectVersionView,versionReport,true,ReportView
+ProjectVersionView,licenseReports,true,ReportView
+
+ReportView,content,false,String
+ReportView,download
 
 RoleAssignmentView,user,false,UserView
 
@@ -47,3 +56,10 @@ VersionBomComponentView,vulnerabilities,true,VulnerabilityV2View
 VersionBomComponentView,matched-files,true,MatchedFileView
 
 VersionRiskProfileView,version,false,ProjectVersionView
+
+VulnerableComponentView,matched-files,true,MatchedFileView
+VulnerableComponentView,vulnerabilities,true,VulnerabilityV2View
+
+VulnerabilityV2View,related-vulnerabilities,false,VulnerabilityV2View
+VulnerabilityV2View,cwes,false,CweView
+VulnerabilityV2View,reference
