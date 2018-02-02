@@ -2,11 +2,13 @@ package com.blackducksoftware.integration.swagger;
 
 import java.nio.charset.StandardCharsets;
 
+import com.blackducksoftware.integration.swagger.model.ApiPath
 import com.blackducksoftware.integration.swagger.model.DefinitionLinkEntry
 import com.blackducksoftware.integration.swagger.model.DefinitionLinks
 import com.blackducksoftware.integration.swagger.model.SwaggerDefinition
 import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitionsParser
 import com.blackducksoftware.integration.swagger.parser.SwaggerEnumsParser
+import com.blackducksoftware.integration.swagger.parser.SwaggerPathsParser
 import com.blackducksoftware.integration.swagger.parser.SwaggerPropertiesParser
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -15,11 +17,14 @@ import freemarker.template.Configuration
 import freemarker.template.Template
 
 public class ModelCreator {
-    public static final String BASE_DIRECTORY = "/Users/ekerwin/Documents/source/integration/hub-common-model/src/main/java";
-    public static final String ENUM_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/enumeration";
-    public static final String VIEW_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/view";
-    public static final String ENUM_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.enumeration";
-    public static final String VIEW_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.view";
+    public static final String BASE_DIRECTORY_ENVIRONMENT_VARIABLE = "SWAGGER_HUB_BASE_DIRECTORY";
+    public static final String DEFAULT_BASE_DIRECTORY = "/tmp";
+    public static final String DISCOVERY_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/api/discovery";
+    public static final String ENUM_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/api/enumeration";
+    public static final String VIEW_DIRECTORY = "/com/blackducksoftware/integration/hub/model/generated/api/view";
+    public static final String DISCOVERY_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.api.discovery";
+    public static final String ENUM_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.api.enumeration";
+    public static final String VIEW_PACKAGE = "com.blackducksoftware.integration.hub.model.generated.api.view";
 
     public static void main(final String[] args) throws Exception {
         final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.4.0.json").toURI());
@@ -55,7 +60,11 @@ public class ModelCreator {
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
         final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getDefinitionsFromJson(swaggerJson)
 
-        logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
+        final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
+        final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson);
+
+        //logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
+
         Set<String> possibleReferencesForProperties = new HashSet<>();
         possibleReferencesForProperties.addAll(allObjectDefinitions.keySet());
         possibleReferencesForProperties.addAll(SwaggerDefinitionsParser.DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY);
@@ -63,15 +72,58 @@ public class ModelCreator {
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(ModelCreator.class, "/");
         configuration.setDefaultEncoding("UTF-8");
+        Template discoveryTemplate = configuration.getTemplate("hubDiscovery.ftl");
         Template enumTemplate = configuration.getTemplate("hubEnum.ftl");
         Template viewTemplate = configuration.getTemplate("hubView.ftl");
 
-        File enumBaseDirectory = new File(ModelCreator.BASE_DIRECTORY + ModelCreator.ENUM_DIRECTORY);
-        File viewBaseDirectory = new File(ModelCreator.BASE_DIRECTORY + ModelCreator.VIEW_DIRECTORY);
+        File discoveryBaseDirectory = new File(getBaseDirectory(), ModelCreator.DISCOVERY_DIRECTORY);
+        File enumBaseDirectory = new File(getBaseDirectory(), ModelCreator.ENUM_DIRECTORY);
+        File viewBaseDirectory = new File(getBaseDirectory(), ModelCreator.VIEW_DIRECTORY);
+        discoveryBaseDirectory.mkdirs();
         enumBaseDirectory.mkdirs();
         viewBaseDirectory.mkdirs();
+        createDiscoveryFile(discoveryBaseDirectory, discoveryTemplate, apiPaths)
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.enumNameToValues);
         createViewFiles(viewBaseDirectory, viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionLinks);
+    }
+
+    public static File getBaseDirectory() {
+        String baseDirectory = System.getenv(BASE_DIRECTORY_ENVIRONMENT_VARIABLE);
+        if (!baseDirectory) {
+            baseDirectory = DEFAULT_BASE_DIRECTORY;
+        }
+        return new File(baseDirectory);
+    }
+
+    public static void createDiscoveryFile(File baseDirectory, Template template, List<ApiPath> apiPaths) {
+        File discoveryFile = new File(baseDirectory, "ApiDiscovery.java");
+
+        final Map<String, Object> model = new HashMap<>();
+        model.put("discoveryPackage", ModelCreator.DISCOVERY_PACKAGE)
+
+        Set imports = new HashSet<>()
+        List links = new ArrayList<>()
+        model.put("links", links)
+
+        apiPaths.each {
+            imports.add(ModelCreator.VIEW_PACKAGE + "." + it.resultClass);
+
+            Map<String, Object> linkModel = new HashMap<>();
+            linkModel.put("label", it.path);
+            linkModel.put("javaConstant", it.javaConstant);
+            linkModel.put("resultClass", it.resultClass);
+            if (it.hasManyResults) {
+                linkModel.put("hasMultipleResults", true);
+            }
+            links.add(linkModel)
+        }
+
+        List sortedImports = new ArrayList<>(imports);
+        Collections.sort(sortedImports);
+        model.put("imports", sortedImports)
+
+        final FileWriter fileWriter = new FileWriter(discoveryFile);
+        template.process(model, fileWriter);
     }
 
     public static void createEnumFiles(File baseDirectory, Template template, Map<String, List<String>> enumNameToValues) {
