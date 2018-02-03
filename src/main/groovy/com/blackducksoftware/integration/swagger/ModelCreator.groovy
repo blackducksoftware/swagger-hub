@@ -188,10 +188,6 @@ public class ModelCreator {
         swaggerDefinitions.each {
             try {
                 File viewFile = baseDirectory
-                if (it.definitionName == 'RiskProfileView') {
-                    println 'gotham'
-                }
-
                 final Map<String, Object> model = new HashMap<>();
                 model.put("className", it.definitionName);
 
@@ -226,14 +222,17 @@ public class ModelCreator {
                         linkModel.put("javaConstant", constant);
 
                         String resultClass = definitionLinks.getResultClass(it.definitionName, link)
-                        String importPackage = definitionLinks.getFullyQualifiedClassName(resultClass);
-                        if (StringUtils.isNotBlank(importPackage)) {
-                            imports.add(importPackage);
-                        }
-                        linkModel.put("resultClass", resultClass);
-                        if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
-                            linkModel.put("hasMultipleResults", true);
-                            model.put('hasMultipleResultsLink', true);
+                        if (StringUtils.isNotBlank(resultClass)) {
+                            model.put('hasLinksWithResults', true);
+                            String importPackage = definitionLinks.getFullyQualifiedClassName(resultClass);
+                            if (StringUtils.isNotBlank(importPackage)) {
+                                imports.add(importPackage);
+                            }
+                            linkModel.put("resultClass", resultClass);
+                            if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
+                                linkModel.put("hasMultipleResults", true);
+                                model.put('hasMultipleResultsLink', true);
+                            }
                         }
                         links.add(linkModel)
                     }
