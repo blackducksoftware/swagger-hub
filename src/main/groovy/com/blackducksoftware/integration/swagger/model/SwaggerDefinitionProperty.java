@@ -59,7 +59,17 @@ public class SwaggerDefinitionProperty extends Stringable {
 
     public String getFullyQualifiedClassName(final Set<String> importPackages, final DefinitionLinks definitionLinks, final Set<String> possibleReferencesForProperties) throws Exception {
         if (StringUtils.isNotBlank(enumType)) {
-            return enumType;
+            final String importPackage = definitionLinks.getFullyQualifiedClassName(enumType);
+            if (StringUtils.isNotBlank(importPackage)) {
+                importPackages.add(importPackage);
+            }
+            if ("array".equals(propertyType)) {
+                return String.format("java.util.List<%s>", enumType);
+            } else if ("string".equals(propertyType)) {
+                return enumType;
+            } else {
+                throw new Exception(String.format("Not a known enum combination for %s and %s in %s", enumType, propertyType, toString()));
+            }
         } else if (StringUtils.isNotBlank(ref)) {
             String reference = ref.replace("#/definitions/", "");
             if (reference.startsWith(OPTIONAL_START)) {
