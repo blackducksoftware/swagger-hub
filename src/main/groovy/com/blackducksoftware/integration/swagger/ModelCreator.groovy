@@ -52,7 +52,7 @@ public class ModelCreator {
     public static final String RESPONSE_DIRECTORY = DIRECTORY_PREFIX + "/response";
     public static final String MODEL_DIRECTORY = DIRECTORY_PREFIX + "/model";
 
-    public static final String API_CORE_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api";
+    public static final String API_CORE_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.core";
     public static final String GENERATED_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.generated";
     public static final String DISCOVERY_PACKAGE = GENERATED_PACKAGE_PREFIX + ".discovery";
     public static final String ENUM_PACKAGE = GENERATED_PACKAGE_PREFIX + ".enumeration";
