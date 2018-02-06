@@ -24,6 +24,7 @@
 package com.blackducksoftware.integration.swagger.parser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,19 +37,51 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class SwaggerEnumsParser {
-    public final Map<String, List<String>> enumNameToValues = new HashMap<>();
+    private final Map<String, List<String>> enumNameToValues = new HashMap<>();
+    private final Map<String, String> valuesKeyToEnumName = new HashMap<>();
 
     public void populateEnumField(final SwaggerDefinitionProperty swaggerDefinitionProperty, final String definitionName, final String propertyName, final JsonObject propertyJsonObject) {
         final List<String> enumValues = getValues(propertyJsonObject);
         if (enumValues == null) {
             return;
         }
+        Collections.sort(enumValues);
         String enumName = definitionName.replaceAll("(?i)view$", "");
         enumName += StringUtils.capitalize(propertyName.replaceAll("(?i)type$", ""));
-        enumName += "Enum";
+        if (enumName.toUpperCase().endsWith("TYPES")) {
+            enumName = enumName.substring(0, enumName.length() - 1);
+        } else {
+            enumName += "Type";
+        }
         enumName = removeDuplicateWords(enumName);
         enumNameToValues.put(enumName, enumValues);
+        final String valuesKey = createValuesKey(enumValues);
+        final String previousName = valuesKeyToEnumName.get(valuesKey);
+        if (previousName != null) {
+            if (enumName.length() < previousName.length()) {
+                // enumName is the winner over previous
+                valuesKeyToEnumName.put(valuesKey, enumName);
+            }
+        } else {
+            // enumName is the winner by default
+            valuesKeyToEnumName.put(valuesKey, enumName);
+        }
         swaggerDefinitionProperty.enumType = enumName;
+    }
+
+    public Map<String, List<String>> getWinningNamesToValues() {
+        final Map<String, List<String>> winningNamesToValues = new HashMap<>();
+        enumNameToValues.forEach((key, value) -> {
+            final String winningName = getWinningName(key);
+            winningNamesToValues.put(winningName, value);
+        });
+        return winningNamesToValues;
+    }
+
+    public String getWinningName(final String enumName) {
+        final List<String> enumValues = enumNameToValues.get(enumName);
+        final String valuesKey = createValuesKey(enumValues);
+        return valuesKeyToEnumName.get(valuesKey);
     }
 
     private List<String> getValues(final JsonObject propertyJsonObject) {
@@ -89,6 +122,10 @@ public class SwaggerEnumsParser {
         }
 
         return nameWithoutDuplicates;
+    }
+
+    private String createValuesKey(final List<String> enumValues) {
+        return StringUtils.join(enumValues, "||");
     }
 
 }

@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import com.blackducksoftware.integration.swagger.parser.SwaggerDefinitionsParser;
+import com.blackducksoftware.integration.swagger.parser.SwaggerEnumsParser;
 import com.blackducksoftware.integration.util.Stringable;
 import com.google.gson.JsonObject;
 
@@ -57,18 +58,19 @@ public class SwaggerDefinitionProperty extends Stringable {
     public String enumType;
     public JsonObject propertyJsonObject;
 
-    public String getFullyQualifiedClassName(final Set<String> importPackages, final DefinitionLinks definitionLinks, final Set<String> possibleReferencesForProperties) throws Exception {
+    public String getFullyQualifiedClassName(final Set<String> importPackages, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser, final Set<String> possibleReferencesForProperties) throws Exception {
         if (StringUtils.isNotBlank(enumType)) {
-            final String importPackage = definitionLinks.getFullyQualifiedClassName(enumType);
+            final String winningEnumName = swaggerEnumsParser.getWinningName(enumType);
+            final String importPackage = definitionLinks.getFullyQualifiedClassName(winningEnumName);
             if (StringUtils.isNotBlank(importPackage)) {
                 importPackages.add(importPackage);
             }
             if ("array".equals(propertyType)) {
-                return String.format("java.util.List<%s>", enumType);
+                return String.format("java.util.List<%s>", winningEnumName);
             } else if ("string".equals(propertyType)) {
-                return enumType;
+                return winningEnumName;
             } else {
-                throw new Exception(String.format("Not a known enum combination for %s and %s in %s", enumType, propertyType, toString()));
+                throw new Exception(String.format("Not a known enum combination for %s and %s in %s", winningEnumName, propertyType, toString()));
             }
         } else if (StringUtils.isNotBlank(ref)) {
             String reference = ref.replace("#/definitions/", "");
