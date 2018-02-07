@@ -16,12 +16,7 @@ public class ApiDiscovery {
 </#list>
 
 <#list links as link>
-    <#if link.hasMultipleResults??>
-        <#assign linkType="LinkMultipleResponses"> 
-    <#else>
-        <#assign linkType="LinkSingleResponse"> 
-    </#if>
-    public static final ${linkType} ${link.javaConstant}_RESPONSE = new ${linkType}(${link.javaConstant}, ${link.resultClass}.class);
+    public static final ${link.linkType} ${link.javaConstant}_RESPONSE = new ${link.linkType}(${link.javaConstant}, ${link.resultClass}.class);
 </#list>
 
     static {

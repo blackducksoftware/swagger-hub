@@ -161,8 +161,11 @@ public class ModelCreator {
             linkModel.put("resultClass", it.resultClass);
             if (it.hasManyResults) {
                 linkModel.put("hasMultipleResults", true);
+                linkModel.put("linkType", "LinkMultipleResponses<${it.resultClass}>");
+            } else {
+                linkModel.put("linkType", "LinkSingleResponse<${it.resultClass}>");
             }
-            links.add(linkModel)
+            links.add(linkModel);
         }
 
         List sortedImports = new ArrayList<>(imports);
@@ -239,10 +242,10 @@ public class ModelCreator {
                             } else if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
                                 imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkMultipleResponses");
                                 linkModel.put("hasMultipleResults", true);
-                                linkModel.put("linkType", "LinkMultipleResponses");
+                                linkModel.put("linkType", "LinkMultipleResponses<${resultClass}>");
                             } else {
                                 imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkSingleResponse");
-                                linkModel.put("linkType", "LinkSingleResponse");
+                                linkModel.put("linkType", "LinkSingleResponse<${resultClass}>");
                             }
                         }
                         links.add(linkModel)
