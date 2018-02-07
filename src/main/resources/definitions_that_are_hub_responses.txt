@@ -1,2 +1,13 @@
+ApiTokenView
 AssignedProjectView
 AssignedUserGroupView
+ComponentSearchResult
+ComponentVersionReferenceView
+ComponentVersionRiskView
+CurrentVersionView
+CweView
+EndUserLicenseAgreementView
+FilterView
+HealthCheckStatusView
+UserCommentView
+VersionRiskProfileView

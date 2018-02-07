@@ -151,6 +151,9 @@ public class ModelCreator {
         apiPaths.each {
             String importPackage = definitionLinks.getFullyQualifiedClassName(it.resultClass);
             imports.add(importPackage);
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkResponse");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkSingleResponse");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkMultipleResponses");
 
             Map<String, Object> linkModel = new HashMap<>();
             linkModel.put("label", it.path);
@@ -228,10 +231,18 @@ public class ModelCreator {
                             if (StringUtils.isNotBlank(importPackage)) {
                                 imports.add(importPackage);
                             }
+                            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkResponse");
                             linkModel.put("resultClass", resultClass);
-                            if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
+                            if ("String".equals(resultClass)) {
+                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkStringResponse");
+                                linkModel.put("linkType", "LinkStringResponse");
+                            } else if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
+                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkMultipleResponses");
                                 linkModel.put("hasMultipleResults", true);
-                                model.put('hasMultipleResultsLink', true);
+                                linkModel.put("linkType", "LinkMultipleResponses");
+                            } else {
+                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkSingleResponse");
+                                linkModel.put("linkType", "LinkSingleResponse");
                             }
                         }
                         links.add(linkModel)
