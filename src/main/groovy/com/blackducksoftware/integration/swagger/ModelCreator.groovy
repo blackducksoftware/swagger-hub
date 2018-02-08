@@ -25,8 +25,7 @@ package com.blackducksoftware.integration.swagger;
 
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.lang3.StringUtils
-
+import com.blackducksoftware.integration.swagger.creator.ComponentCreator
 import com.blackducksoftware.integration.swagger.model.ApiPath
 import com.blackducksoftware.integration.swagger.model.DefinitionLinkEntry
 import com.blackducksoftware.integration.swagger.model.DefinitionLinks
@@ -127,7 +126,9 @@ public class ModelCreator {
         modelBaseDirectory.mkdirs();
         createDiscoveryFile(discoveryBaseDirectory, discoveryTemplate, apiPaths, definitionLinks)
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.winningNamesToValues);
-        createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, definitionLinks, swaggerEnumsParser);
+
+        ComponentCreator componentCreator = new ComponentCreator();
+        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, definitionLinks, swaggerEnumsParser);
     }
 
     public static File getBaseDirectory() {
@@ -187,95 +188,6 @@ public class ModelCreator {
 
             final FileWriter fileWriter = new FileWriter(enumFile);
             template.process(model, fileWriter);
-        }
-    }
-
-    public static void createViewFiles(File baseDirectory, Template template, List<SwaggerDefinition> swaggerDefinitions, Set<String> possibleReferencesForProperties, final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse, DefinitionLinks definitionLinks, SwaggerEnumsParser swaggerEnumsParser) {
-        swaggerDefinitions.each {
-            try {
-                File viewFile = baseDirectory
-                final Map<String, Object> model = new HashMap<>();
-                model.put("className", it.definitionName);
-
-                Set imports = new HashSet<>()
-
-                if (definitionNamesToExtendHubView.contains(it.definitionName)) {
-                    model.put("viewPackage", ModelCreator.VIEW_PACKAGE)
-                    model.put("baseClass", "HubView");
-                    imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubView");
-                    viewFile = new File(viewFile, ModelCreator.VIEW_DIRECTORY);
-                } else if (definitionNamesToExtendHubResponse.contains(it.definitionName)) {
-                    model.put("viewPackage", ModelCreator.RESPONSE_PACKAGE)
-                    model.put("baseClass", "HubResponse");
-                    imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubResponse");
-                    viewFile = new File(viewFile, ModelCreator.RESPONSE_DIRECTORY);
-                } else {
-                    model.put("viewPackage", ModelCreator.MODEL_PACKAGE)
-                    model.put("baseClass", "HubModel");
-                    imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubModel");
-                    viewFile = new File(viewFile, ModelCreator.MODEL_DIRECTORY);
-                }
-                viewFile = new File(viewFile, it.definitionName + ".java");
-
-                Map<String, String> definitionLinksToConstants = definitionLinks.getLinksToJavaConstants(it.definitionName)
-                if (definitionLinksToConstants != null && !definitionLinksToConstants.empty) {
-                    model.put("hasLinks", true)
-                    List links = new ArrayList<>()
-                    model.put("links", links)
-                    definitionLinksToConstants.each { link, constant ->
-                        Map<String, Object> linkModel = new HashMap<>();
-                        linkModel.put("label", link);
-                        linkModel.put("javaConstant", constant);
-
-                        String resultClass = definitionLinks.getResultClass(it.definitionName, link)
-                        if (StringUtils.isNotBlank(resultClass)) {
-                            model.put('hasLinksWithResults', true);
-                            String importPackage = definitionLinks.getFullyQualifiedClassName(resultClass);
-                            if (StringUtils.isNotBlank(importPackage)) {
-                                imports.add(importPackage);
-                            }
-                            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkResponse");
-                            linkModel.put("resultClass", resultClass);
-                            if ("String".equals(resultClass)) {
-                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkStringResponse");
-                                linkModel.put("linkType", "LinkStringResponse");
-                            } else if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
-                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkMultipleResponses");
-                                linkModel.put("hasMultipleResults", true);
-                                linkModel.put("linkType", "LinkMultipleResponses<${resultClass}>");
-                            } else {
-                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkSingleResponse");
-                                linkModel.put("linkType", "LinkSingleResponse<${resultClass}>");
-                            }
-                        }
-                        links.add(linkModel)
-                    }
-                }
-
-                List<Map<String, Object>> fields = new ArrayList<>();
-                model.put("classFields", fields);
-
-                it.definitionProperties.each { property ->
-                    Map<String, Object> propertyModel = new HashMap<>();
-                    propertyModel.put("name", property.name);
-                    String propertyType = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
-                    String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
-                    if (StringUtils.isNotBlank(importPackage)) {
-                        imports.add(importPackage);
-                    }
-                    propertyModel.put("type", propertyType);
-                    fields.add(propertyModel)
-                }
-
-                List sortedImports = new ArrayList<>(imports);
-                Collections.sort(sortedImports);
-                model.put("imports", sortedImports)
-
-                final FileWriter fileWriter = new FileWriter(viewFile);
-                template.process(model, fileWriter);
-            } catch (Exception e) {
-                throw new Exception("Exception caught processing ${it.definitionName}: " + e.getMessage(), e);
-            }
         }
     }
 
