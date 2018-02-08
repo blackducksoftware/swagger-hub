@@ -49,15 +49,18 @@ public class ModelCreator {
     public static final String ENUM_DIRECTORY = DIRECTORY_PREFIX + "/enumeration";
     public static final String VIEW_DIRECTORY = DIRECTORY_PREFIX + "/view";
     public static final String RESPONSE_DIRECTORY = DIRECTORY_PREFIX + "/response";
-    public static final String MODEL_DIRECTORY = DIRECTORY_PREFIX + "/model";
+    public static final String COMPONENT_DIRECTORY = DIRECTORY_PREFIX + "/component";
 
     public static final String API_CORE_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.core";
     public static final String GENERATED_PACKAGE_PREFIX = "com.blackducksoftware.integration.hub.api.generated";
     public static final String DISCOVERY_PACKAGE = GENERATED_PACKAGE_PREFIX + ".discovery";
     public static final String ENUM_PACKAGE = GENERATED_PACKAGE_PREFIX + ".enumeration";
-    public static final String VIEW_PACKAGE = GENERATED_PACKAGE_PREFIX + ".view";
-    public static final String RESPONSE_PACKAGE = GENERATED_PACKAGE_PREFIX + ".response";
-    public static final String MODEL_PACKAGE = GENERATED_PACKAGE_PREFIX + ".model";
+    public static final String VIEW_PACKAGE_SUFFIX = ".view";
+    public static final String RESPONSE_PACKAGE_SUFFIX = ".response";
+    public static final String COMPONENT_PACKAGE_SUFFIX = ".component";
+    public static final String VIEW_PACKAGE = GENERATED_PACKAGE_PREFIX + VIEW_PACKAGE_SUFFIX;
+    public static final String RESPONSE_PACKAGE = GENERATED_PACKAGE_PREFIX + RESPONSE_PACKAGE_SUFFIX;
+    public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
         final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.4.0.json").toURI());
@@ -118,7 +121,7 @@ public class ModelCreator {
         File enumBaseDirectory = new File(getBaseDirectory(), ModelCreator.ENUM_DIRECTORY);
         File viewBaseDirectory = new File(getBaseDirectory(), ModelCreator.VIEW_DIRECTORY);
         File responseBaseDirectory = new File(getBaseDirectory(), ModelCreator.RESPONSE_DIRECTORY);
-        File modelBaseDirectory = new File(getBaseDirectory(), ModelCreator.MODEL_DIRECTORY);
+        File modelBaseDirectory = new File(getBaseDirectory(), ModelCreator.COMPONENT_DIRECTORY);
         discoveryBaseDirectory.mkdirs();
         enumBaseDirectory.mkdirs();
         viewBaseDirectory.mkdirs();

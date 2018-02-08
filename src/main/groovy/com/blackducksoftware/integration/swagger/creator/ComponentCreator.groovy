@@ -25,7 +25,7 @@ public class ComponentCreator {
                     viewFile = new File(viewFile, ModelCreator.RESPONSE_DIRECTORY);
                     freemarkerComponentType = FreemarkerComponentType.RESPONSE
                 } else {
-                    viewFile = new File(viewFile, ModelCreator.MODEL_DIRECTORY);
+                    viewFile = new File(viewFile, ModelCreator.COMPONENT_DIRECTORY);
                 }
                 viewFile = new File(viewFile, it.definitionName + ".java")
 

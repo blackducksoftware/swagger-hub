@@ -73,7 +73,7 @@ public class DefinitionLinks {
             } else if (definitionNamesToExtendHubResponse.contains(definitionName)) {
                 namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.RESPONSE_PACKAGE, definitionName));
             } else {
-                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.MODEL_PACKAGE, definitionName));
+                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.COMPONENT_PACKAGE, definitionName));
             }
         });
         enumNames.forEach(enumName -> {
