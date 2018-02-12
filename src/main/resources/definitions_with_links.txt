@@ -2,7 +2,7 @@
 # definition name, link label, flag for multiple results, result class
 ###
 
-CodeLocationView,scans,true,String
+CodeLocationView,scans,true,ScanSummaryView
 
 ComponentVersionView,references,true,ComponentVersionReferenceView
 ComponentVersionView,component,false,ComponentView
