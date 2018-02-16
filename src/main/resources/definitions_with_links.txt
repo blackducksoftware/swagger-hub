@@ -10,6 +10,8 @@ ComponentVersionView,origins,true,OriginView
 ComponentVersionView,vulnerabilities,true,VulnerabilityV2View
 ComponentVersionView,risk-profile,false,ComponentVersionRiskView
 
+ComponentView,versions,true,ComponentVersionView
+
 CweView,sources
 
 LicenseView,text,false,String
