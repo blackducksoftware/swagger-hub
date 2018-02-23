@@ -14,6 +14,9 @@ ComponentView,versions,true,ComponentVersionView
 
 CweView,sources
 
+ExternalExtensionView,global-options,true,ExternalExtensionConfigValueView
+ExternalExtensionView,user-options,true,ExternalExtensionUserView
+
 LicenseView,text,false,String
 
 MatchedFileView,codelocations,false,CodeLocationView
