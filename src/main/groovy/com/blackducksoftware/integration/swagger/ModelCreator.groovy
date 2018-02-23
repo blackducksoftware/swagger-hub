@@ -156,8 +156,9 @@ public class ModelCreator {
             String importPackage = definitionLinks.getFullyQualifiedClassName(it.resultClass);
             imports.add(importPackage);
             imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkResponse");
-            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkSingleResponse");
-            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkMultipleResponses");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubPath");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubPathSingleResponse");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubPathMultipleResponses");
 
             Map<String, Object> linkModel = new HashMap<>();
             linkModel.put("label", it.path);
@@ -165,9 +166,9 @@ public class ModelCreator {
             linkModel.put("resultClass", it.resultClass);
             if (it.hasManyResults) {
                 linkModel.put("hasMultipleResults", true);
-                linkModel.put("linkType", "LinkMultipleResponses<${it.resultClass}>");
+                linkModel.put("linkType", "HubPathMultipleResponses<${it.resultClass}>");
             } else {
-                linkModel.put("linkType", "LinkSingleResponse<${it.resultClass}>");
+                linkModel.put("linkType", "HubPathSingleResponse<${it.resultClass}>");
             }
             links.add(linkModel);
         }

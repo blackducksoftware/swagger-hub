@@ -9,10 +9,10 @@ import ${import};
 
 //this file should not be edited - if changes are necessary, the generator should be updated, then this file should be re-created
 public class ApiDiscovery {
-    public static final Map<String, LinkResponse> links = new HashMap<>();
+    public static final Map<HubPath, LinkResponse> links = new HashMap<>();
 
 <#list links as link>
-    public static final String ${link.javaConstant} = "${link.label}";
+    public static final HubPath ${link.javaConstant} = new HubPath("${link.label}");
 </#list>
 
 <#list links as link>
