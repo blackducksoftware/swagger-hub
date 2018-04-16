@@ -74,15 +74,17 @@ public class ComponentCreator {
                 model.put("classFields", fields);
 
                 it.definitionProperties.each { property ->
-                    Map<String, Object> propertyModel = new HashMap<>();
-                    propertyModel.put("name", property.name);
-                    String propertyType = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
-                    String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
-                    if (StringUtils.isNotBlank(importPackage)) {
-                        imports.add(importPackage);
+                    if (shouldProcessProperty(it.definitionName, property.name)) {
+                        Map<String, Object> propertyModel = new HashMap<>();
+                        propertyModel.put("name", property.name);
+                        String propertyType = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
+                        String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
+                        if (StringUtils.isNotBlank(importPackage)) {
+                            imports.add(importPackage);
+                        }
+                        propertyModel.put("type", propertyType);
+                        fields.add(propertyModel)
                     }
-                    propertyModel.put("type", propertyType);
-                    fields.add(propertyModel)
                 }
 
                 List sortedImports = new ArrayList<>(imports);
@@ -96,4 +98,15 @@ public class ComponentCreator {
             }
         }
     }
+
+    // for NotificationView and UserNotificationView we have to omit the
+    // 'content' property because the swagger claims it is a String when in
+    // fact it is an object and this discrepancy breaks gson parsing
+    private boolean shouldProcessProperty(String definitionName, String propertyName) {
+        if (('NotificationView' == definitionName || 'NotificationUserView' == definitionName) && ('content' == propertyName)) {
+            return false;
+        }
+        return true;
+    }
+
 }

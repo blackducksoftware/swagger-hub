@@ -37,7 +37,8 @@ public class SwaggerDefinitionsParser {
         'DateTime',
         'string,RiskPriorityDistribution',
         'Request to create a custom license',
-        'vulnerability remediation report request'
+        'vulnerability remediation report request',
+        'JsonNode'
     ]
 
     private final SwaggerPropertiesParser swaggerPropertiesParser

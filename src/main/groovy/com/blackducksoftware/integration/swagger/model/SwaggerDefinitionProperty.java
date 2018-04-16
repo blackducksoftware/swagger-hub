@@ -137,6 +137,8 @@ public class SwaggerDefinitionProperty extends Stringable {
             return "Integer";
         } else if ("integer".equals(swaggerPrimitive) && "int64".equals(format)) {
             return "Long";
+        } else if ("long".equals(swaggerPrimitive)) {
+            return "Long";
         } else if ("boolean".equals(swaggerPrimitive)) {
             return "Boolean";
         } else if ("DateTime".equals(swaggerPrimitive)) {
