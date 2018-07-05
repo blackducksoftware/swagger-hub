@@ -2,6 +2,7 @@ AssignedUserView
 CodeLocationView
 ComplexLicenseView
 ComponentDetailsView
+ComponentSearchResultView
 ComponentVersionView
 ComponentView
 ExternalExtensionConfigValueView
