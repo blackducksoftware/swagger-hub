@@ -6,6 +6,7 @@ ComponentVersionReferenceView
 ComponentVersionRiskView
 CurrentVersionView
 CweView
+DashboardSummaryView
 EndUserLicenseAgreementView
 FilterView
 HealthCheckStatusView

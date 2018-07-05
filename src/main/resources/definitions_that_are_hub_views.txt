@@ -1,7 +1,7 @@
 AssignedUserView
 CodeLocationView
 ComplexLicenseView
-ComponentSearchResultView
+ComponentDetailsView
 ComponentVersionView
 ComponentView
 ExternalExtensionConfigValueView
@@ -17,6 +17,7 @@ OriginView
 PolicyRuleView
 PolicyRuleViewV2
 PolicyStatusView
+ProjectDashboardRiskAmalgamation
 ProjectVersionView
 ProjectView
 ReportView

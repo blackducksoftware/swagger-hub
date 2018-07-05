@@ -45,6 +45,10 @@ public class SwaggerDefinitionProperty extends Stringable {
     private static final String COLLECTION_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
     private static final String LIST_START = "List" + SwaggerDefinitionsParser.CONTAINER_START_MARKER;
     private static final String LIST_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
+    private static final String SET_START = "Set" + SwaggerDefinitionsParser.CONTAINER_START_MARKER;
+    private static final String SET_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
+    private static final String PAGE_VIEW_START = "PageView" + SwaggerDefinitionsParser.CONTAINER_START_MARKER;
+    private static final String PAGE_VIEW_END = SwaggerDefinitionsParser.CONTAINER_END_MARKER;
 
     public String name;
     public String description;
@@ -74,23 +78,16 @@ public class SwaggerDefinitionProperty extends Stringable {
             }
         } else if (StringUtils.isNotBlank(ref)) {
             String reference = ref.replace("#/definitions/", "");
-            if (reference.startsWith(OPTIONAL_START)) {
-                final int start = reference.indexOf(OPTIONAL_START) + OPTIONAL_START.length();
-                final int end = reference.lastIndexOf(OPTIONAL_END);
-                reference = reference.substring(start, end);
-            }
-            boolean isList = false;
-            if (reference.startsWith(COLLECTION_START)) {
-                final int start = reference.indexOf(COLLECTION_START) + COLLECTION_START.length();
-                final int end = reference.lastIndexOf(COLLECTION_END);
-                reference = reference.substring(start, end);
-                isList = true;
-            } else if (reference.startsWith(LIST_START)) {
-                final int start = reference.indexOf(LIST_START) + LIST_START.length();
-                final int end = reference.lastIndexOf(LIST_END);
-                reference = reference.substring(start, end);
-                isList = true;
-            }
+            reference = cleanReference(reference, OPTIONAL_START, OPTIONAL_END);
+
+            String cleanedReference = reference;
+            cleanedReference = cleanReference(cleanedReference, COLLECTION_START, COLLECTION_END);
+            cleanedReference = cleanReference(cleanedReference, LIST_START, LIST_END);
+            cleanedReference = cleanReference(cleanedReference, SET_START, SET_END);
+            cleanedReference = cleanReference(cleanedReference, PAGE_VIEW_START, PAGE_VIEW_END);
+            final boolean isList = !reference.equals(cleanedReference);
+            reference = cleanedReference;
+
             final String converted = convertSwaggerPrimitiveToJava(reference);
             if (converted != null) {
                 return isList ? String.format("java.util.List<%s>", converted) : converted;
@@ -117,6 +114,8 @@ public class SwaggerDefinitionProperty extends Stringable {
             final String javaType = propertyJsonObject.getAsJsonObject("items").get("type").getAsString();
             if ("string".equals(javaType)) {
                 return "java.util.List<String>";
+            } else if ("integer".equals(javaType)) {
+                return "java.util.List<Integer>";
             }
         } else {
             final String converted = convertSwaggerPrimitiveToJava(propertyType);
@@ -133,6 +132,8 @@ public class SwaggerDefinitionProperty extends Stringable {
             return "Object";
         } else if ("number".equals(swaggerPrimitive) && "double".equals(format)) {
             return "java.math.BigDecimal";
+        } else if ("int".equals(swaggerPrimitive)) {
+            return "Integer";
         } else if ("integer".equals(swaggerPrimitive) && "int32".equals(format)) {
             return "Integer";
         } else if ("integer".equals(swaggerPrimitive) && "int64".equals(format)) {
@@ -153,4 +154,14 @@ public class SwaggerDefinitionProperty extends Stringable {
 
         return null;
     }
+
+    private String cleanReference(final String reference, final String startMarker, final String endMarker) {
+        if (reference.startsWith(startMarker)) {
+            final int start = reference.indexOf(startMarker) + startMarker.length();
+            final int end = reference.lastIndexOf(endMarker);
+            return reference.substring(start, end);
+        }
+        return reference;
+    }
+
 }

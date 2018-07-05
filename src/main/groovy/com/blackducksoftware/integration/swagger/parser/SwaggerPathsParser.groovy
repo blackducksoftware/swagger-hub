@@ -28,7 +28,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
 class SwaggerPathsParser {
-    public List<ApiPath> getPathsToResponses(JsonObject swaggerJson) {
+    public List<ApiPath> getPathsToResponses(JsonObject swaggerJson, Map<String, String> overrideEntries) {
         def apiPaths = []
 
         final JsonObject definitions = swaggerJson.get('paths').getAsJsonObject();
@@ -54,6 +54,9 @@ class SwaggerPathsParser {
                                         int end = resultClass.indexOf(SwaggerDefinitionsParser.CONTAINER_END_MARKER) - 1
                                         resultClass = resultClass[start..end]
                                         hasManyResults = true
+                                    }
+                                    if (overrideEntries.containsKey(path)) {
+                                        resultClass = overrideEntries.get(path)
                                     }
                                     apiPaths.add(new ApiPath(path, hasManyResults, resultClass))
                                 }

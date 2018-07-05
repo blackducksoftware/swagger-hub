@@ -63,7 +63,7 @@ public class ModelCreator {
     public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.5.0.json").toURI());
+        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.7.0.json").toURI());
         final FileInputStream jsonFileInputStream = new FileInputStream(jsonFile);
         final InputStreamReader jsonInputStreamReader = new InputStreamReader(jsonFileInputStream, StandardCharsets.UTF_8);
 
@@ -94,6 +94,15 @@ public class ModelCreator {
             }
         }
 
+        final File apiPathOverridesFile = new File(ModelCreator.class.getClassLoader().getResource("api_path_overrides.txt").toURI());
+        Map<String, String> overrideEntries = [:]
+        apiPathOverridesFile.eachLine { line ->
+            if (line && !line.startsWith('#')) {
+                String[] pieces = line.split(',')
+                overrideEntries.put(pieces[0], pieces[1])
+            }
+        }
+
         final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser()
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser)
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
@@ -102,7 +111,7 @@ public class ModelCreator {
         final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, swaggerEnumsParser.winningNamesToValues.keySet())
 
         final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
-        final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson);
+        final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson, overrideEntries);
 
         logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
 
