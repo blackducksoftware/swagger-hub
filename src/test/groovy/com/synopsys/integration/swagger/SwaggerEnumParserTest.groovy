@@ -1,10 +1,9 @@
-package com.blackducksoftware.integration.swagger;
+package com.synopsys.integration.swagger
 
-import static org.junit.Assert.assertEquals;
+import com.synopsys.integration.swagger.parser.SwaggerEnumsParser
+import org.junit.Test
 
-import org.junit.Test;
-
-import com.blackducksoftware.integration.swagger.parser.SwaggerEnumsParser;
+import static org.junit.Assert.assertEquals
 
 public class SwaggerEnumParserTest {
     @Test

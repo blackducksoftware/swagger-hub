@@ -16,22 +16,22 @@ public class ${className} extends ${baseClass} {
 
 </#if>
 <#if hasLinks??>
-  <#list links as link>
+    <#list links as link>
     public static final String ${link.javaConstant} = "${link.label}";
-  </#list>
+    </#list>
 
-<#list links as link>
-    <#if link.resultClass??>
+    <#list links as link>
+        <#if link.resultClass??>
     public static final ${link.linkType} ${link.javaConstant}_RESPONSE = new ${link.linkType}(${link.javaConstant}, ${link.resultClass}.class);
-    </#if>
-</#list>
+        </#if>
+    </#list>
 
 </#if>
 <#if hasLinksWithResults??>
     static {
     <#list links as link>
         <#if link.resultClass??>
-            links.put(${link.javaConstant}, ${link.javaConstant}_RESPONSE);
+        links.put(${link.javaConstant}, ${link.javaConstant}_RESPONSE);
         </#if>
     </#list>
     }

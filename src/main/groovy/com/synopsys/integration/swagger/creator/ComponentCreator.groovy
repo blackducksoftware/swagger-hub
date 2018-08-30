@@ -1,17 +1,19 @@
-package com.blackducksoftware.integration.swagger.creator;
+package com.synopsys.integration.swagger.creator
 
+import com.synopsys.integration.swagger.ModelCreator
+import com.synopsys.integration.swagger.model.DefinitionLinks
+import com.synopsys.integration.swagger.model.SwaggerDefinition
+import com.synopsys.integration.swagger.parser.SwaggerEnumsParser
+import freemarker.template.Template
 import org.apache.commons.lang3.StringUtils
-
-import com.blackducksoftware.integration.swagger.ModelCreator;
-import com.blackducksoftware.integration.swagger.model.DefinitionLinks;
-import com.blackducksoftware.integration.swagger.model.SwaggerDefinition;
-import com.blackducksoftware.integration.swagger.parser.SwaggerEnumsParser;
-
-import freemarker.template.Template;
 
 public class ComponentCreator {
 
-    public void createViewFiles(final File baseDirectory, final Template template, final List<SwaggerDefinition> swaggerDefinitions, final Set<String> possibleReferencesForProperties, final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser) {
+    public void createViewFiles(final File baseDirectory,
+                                final Template template,
+                                final List<SwaggerDefinition> swaggerDefinitions,
+                                final Set<String> possibleReferencesForProperties,
+                                final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser) {
         swaggerDefinitions.each {
             try {
                 File viewFile = baseDirectory

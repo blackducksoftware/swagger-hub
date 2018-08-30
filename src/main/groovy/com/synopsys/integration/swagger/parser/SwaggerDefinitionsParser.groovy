@@ -21,25 +21,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.blackducksoftware.integration.swagger.parser;
+package com.synopsys.integration.swagger.parser
 
-import com.blackducksoftware.integration.swagger.model.SwaggerDefinition
-import com.blackducksoftware.integration.swagger.model.SwaggerDefinitionProperty
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.synopsys.integration.swagger.model.SwaggerDefinition
+import com.synopsys.integration.swagger.model.SwaggerDefinitionProperty
 
 public class SwaggerDefinitionsParser {
     public static final String CONTAINER_START_MARKER = '\u00ab'
     public static final String CONTAINER_END_MARKER = '\u00bb'
-    public static final List<String> DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY = [
-        'boolean',
-        'string',
-        'DateTime',
-        'string,RiskPriorityDistribution',
-        'Request to create a custom license',
-        'vulnerability remediation report request',
-        'JsonNode'
-    ]
+    public static final List<String> DEFINITIONS_TO_IGNORE_AND_CREATE_MANUALLY = ['boolean',
+                                                                                  'string',
+                                                                                  'DateTime',
+                                                                                  'string,RiskPriorityDistribution',
+                                                                                  'Request to create a custom license',
+                                                                                  'vulnerability remediation report request',
+                                                                                  'JsonNode']
 
     private final SwaggerPropertiesParser swaggerPropertiesParser
 

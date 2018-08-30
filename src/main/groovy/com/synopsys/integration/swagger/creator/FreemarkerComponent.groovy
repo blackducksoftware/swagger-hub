@@ -1,6 +1,6 @@
-package com.blackducksoftware.integration.swagger.creator
+package com.synopsys.integration.swagger.creator
 
-import com.blackducksoftware.integration.swagger.ModelCreator
+import com.synopsys.integration.swagger.ModelCreator
 
 class FreemarkerComponent {
     private String baseClass

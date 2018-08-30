@@ -21,20 +21,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.blackducksoftware.integration.swagger.parser
+package com.synopsys.integration.swagger.parser
 
-import com.blackducksoftware.integration.swagger.model.ApiPath
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.synopsys.integration.swagger.model.ApiPath
 
 class SwaggerPathsParser {
-    public List<ApiPath> getPathsToResponses(JsonObject swaggerJson, Map<String, String> overrideEntries) {
+    public List<ApiPath> getPathsToResponses(JsonObject swaggerJson, Set<String> apiPathsToIgnore, Map<String, String> overrideEntries) {
         def apiPaths = []
 
         final JsonObject definitions = swaggerJson.get('paths').getAsJsonObject();
         for (final Map.Entry<String, JsonElement> entry : definitions.entrySet()) {
             String path = entry.key
-            if (!'/api/'.equals(path) && !path.contains('{') &&!path.contains('}')) {
+            println path
+            if (!path.contains('{') && !path.contains('}') && !apiPathsToIgnore.contains(path)) {
                 if (entry.value.asJsonObject.has('get')) {
                     JsonObject get = entry.value.asJsonObject.getAsJsonObject('get')
                     if (get.has('responses')) {

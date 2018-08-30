@@ -21,22 +21,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.blackducksoftware.integration.swagger.parser
+package com.synopsys.integration.swagger.parser
 
-import com.blackducksoftware.integration.swagger.model.SwaggerDefinitionProperty
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.synopsys.integration.swagger.model.SwaggerDefinitionProperty
 
 class SwaggerPropertiesParser {
-    private static final List<String> knownPropertyFields = [
-        'format',
-        'type',
-        'description',
-        'readOnly',
-        'enum',
-        'items',
-        '$ref'
-    ]
+    private static final List<String> knownPropertyFields = ['format',
+                                                             'type',
+                                                             'description',
+                                                             'readOnly',
+                                                             'enum',
+                                                             'items',
+                                                             '$ref']
 
     private final SwaggerEnumsParser swaggerEnumsParser
 
