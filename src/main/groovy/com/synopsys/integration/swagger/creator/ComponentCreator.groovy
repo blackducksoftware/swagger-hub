@@ -1,29 +1,52 @@
+/*
+ * swagger-hub
+ *
+ * Copyright (C) 2018 Black Duck Software, Inc.
+ * http://www.blackducksoftware.com/
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package com.synopsys.integration.swagger.creator
 
 import com.synopsys.integration.swagger.ModelCreator
 import com.synopsys.integration.swagger.model.DefinitionLinks
+import com.synopsys.integration.swagger.model.FullyQualifiedClassName
 import com.synopsys.integration.swagger.model.SwaggerDefinition
 import com.synopsys.integration.swagger.parser.SwaggerEnumsParser
 import freemarker.template.Template
 import org.apache.commons.lang3.StringUtils
 
 public class ComponentCreator {
-
     public void createViewFiles(final File baseDirectory,
                                 final Template template,
                                 final List<SwaggerDefinition> swaggerDefinitions,
                                 final Set<String> possibleReferencesForProperties,
-                                final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser) {
+                                final Set<String> definitionNamesToExtendBlackDuckView, final Set<String> definitionNamesToExtendBlackDuckResponse, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser) {
         swaggerDefinitions.each {
             try {
                 File viewFile = baseDirectory
                 final Set imports = new HashSet<>()
 
                 FreemarkerComponentType freemarkerComponentType = FreemarkerComponentType.COMPONENT
-                if (definitionNamesToExtendHubView.contains(it.definitionName)) {
+                if (definitionNamesToExtendBlackDuckView.contains(it.definitionName)) {
                     viewFile = new File(viewFile, ModelCreator.VIEW_DIRECTORY);
                     freemarkerComponentType = FreemarkerComponentType.VIEW
-                } else if (definitionNamesToExtendHubResponse.contains(it.definitionName)) {
+                } else if (definitionNamesToExtendBlackDuckResponse.contains(it.definitionName)) {
                     viewFile = new File(viewFile, ModelCreator.RESPONSE_DIRECTORY);
                     freemarkerComponentType = FreemarkerComponentType.RESPONSE
                 } else {
@@ -57,14 +80,14 @@ public class ComponentCreator {
                             imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkResponse");
                             linkModel.put("resultClass", resultClass);
                             if ("String".equals(resultClass)) {
-                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkStringResponse");
+                                addImport(imports, "LinkStringResponse")
                                 linkModel.put("linkType", "LinkStringResponse");
                             } else if (definitionLinks.canHaveManyResults(it.definitionName, link)) {
-                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkMultipleResponses");
+                                addImport(imports, "LinkMultipleResponses")
                                 linkModel.put("hasMultipleResults", true);
                                 linkModel.put("linkType", "LinkMultipleResponses<${resultClass}>");
                             } else {
-                                imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkSingleResponse");
+                                addImport(imports, "LinkSingleResponse")
                                 linkModel.put("linkType", "LinkSingleResponse<${resultClass}>");
                             }
                         }
@@ -79,12 +102,16 @@ public class ComponentCreator {
                     if (shouldProcessProperty(it.definitionName, property.name)) {
                         Map<String, Object> propertyModel = new HashMap<>();
                         propertyModel.put("name", property.name);
-                        String propertyType = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
+                        propertyModel.put("snakeCaseName", property.name.replaceAll(/[A-Z]/) { m -> "_${m}" }.toUpperCase());
+                        FullyQualifiedClassName fullyQualifiedClassName = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
+                        String propertyType = fullyQualifiedClassName.fullyQualifiedClassName;
                         String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
                         if (StringUtils.isNotBlank(importPackage)) {
                             imports.add(importPackage);
                         }
                         propertyModel.put("type", propertyType);
+                        propertyModel.put("rawType", fullyQualifiedClassName.rawType);
+                        propertyModel.put("isList", fullyQualifiedClassName.list);
                         fields.add(propertyModel)
                     }
                 }
@@ -109,6 +136,10 @@ public class ComponentCreator {
             return false;
         }
         return true;
+    }
+
+    private void addImport(Set imports, String apiClass) {
+        imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + apiClass);
     }
 
 }

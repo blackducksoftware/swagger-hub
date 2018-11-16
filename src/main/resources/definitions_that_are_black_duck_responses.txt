@@ -10,5 +10,6 @@ DashboardSummaryView
 EndUserLicenseAgreementView
 FilterView
 HealthCheckStatusView
+LegacyFilterView
 UserCommentView
 VersionRiskProfileView

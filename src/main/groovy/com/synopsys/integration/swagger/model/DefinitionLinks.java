@@ -1,9 +1,9 @@
 /**
  * swagger-hub
- * <p>
+ *
  * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
- * <p>
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,9 +11,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -38,7 +38,7 @@ public class DefinitionLinks {
     private final Map<String, Map<String, String>> namesToLinksToResultClasses = new HashMap<>();
     private final Map<String, String> namesToFullyQualifiedClassNames = new HashMap<>();
 
-    public DefinitionLinks(final List<DefinitionLinkEntry> linkEntries, final Set<String> allDefinitionNames, final Set<String> definitionNamesToExtendHubView, final Set<String> definitionNamesToExtendHubResponse,
+    public DefinitionLinks(final List<DefinitionLinkEntry> linkEntries, final Set<String> allDefinitionNames, final Set<String> definitionNamesToExtendBlackDuckView, final Set<String> definitionNamesToExtendBlackDuckResponse,
             final Set<String> enumNames) {
         linkEntries.forEach(linkEntry -> {
             final String definitionName = linkEntry.getDefinitionName();
@@ -68,9 +68,9 @@ public class DefinitionLinks {
         });
 
         allDefinitionNames.forEach(definitionName -> {
-            if (definitionNamesToExtendHubView.contains(definitionName)) {
+            if (definitionNamesToExtendBlackDuckView.contains(definitionName)) {
                 namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.VIEW_PACKAGE, definitionName));
-            } else if (definitionNamesToExtendHubResponse.contains(definitionName)) {
+            } else if (definitionNamesToExtendBlackDuckResponse.contains(definitionName)) {
                 namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.RESPONSE_PACKAGE, definitionName));
             } else {
                 namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.COMPONENT_PACKAGE, definitionName));

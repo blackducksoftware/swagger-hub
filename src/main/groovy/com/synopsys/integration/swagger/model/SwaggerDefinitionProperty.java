@@ -1,9 +1,9 @@
 /**
  * swagger-hub
- * <p>
+ *
  * Copyright (C) 2018 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
- * <p>
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements. See the NOTICE file
  * distributed with this work for additional information
@@ -11,9 +11,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License. You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -62,7 +62,8 @@ public class SwaggerDefinitionProperty extends Stringable {
     public String enumType;
     public JsonObject propertyJsonObject;
 
-    public String getFullyQualifiedClassName(final Set<String> importPackages, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser, final Set<String> possibleReferencesForProperties) throws Exception {
+    public FullyQualifiedClassName getFullyQualifiedClassName(final Set<String> importPackages, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser, final Set<String> possibleReferencesForProperties)
+            throws Exception {
         if (StringUtils.isNotBlank(enumType)) {
             final String winningEnumName = swaggerEnumsParser.getWinningName(enumType);
             final String importPackage = definitionLinks.getFullyQualifiedClassName(winningEnumName);
@@ -70,9 +71,9 @@ public class SwaggerDefinitionProperty extends Stringable {
                 importPackages.add(importPackage);
             }
             if ("array".equals(propertyType)) {
-                return String.format("java.util.List<%s>", winningEnumName);
+                return new FullyQualifiedClassName(winningEnumName, true);
             } else if ("string".equals(propertyType)) {
-                return winningEnumName;
+                return new FullyQualifiedClassName(winningEnumName, false);
             } else {
                 throw new Exception(String.format("Not a known enum combination for %s and %s in %s", winningEnumName, propertyType, toString()));
             }
@@ -90,7 +91,7 @@ public class SwaggerDefinitionProperty extends Stringable {
 
             final String converted = convertSwaggerPrimitiveToJava(reference);
             if (converted != null) {
-                return isList ? String.format("java.util.List<%s>", converted) : converted;
+                return new FullyQualifiedClassName(converted, isList);
             }
             if (!possibleReferencesForProperties.contains(reference)) {
                 throw new Exception("Not a known java type: " + reference + " in " + toString());
@@ -99,7 +100,7 @@ public class SwaggerDefinitionProperty extends Stringable {
             if (StringUtils.isNotBlank(importPackage)) {
                 importPackages.add(importPackage);
             }
-            return isList ? String.format("java.util.List<%s>", reference) : reference;
+            return new FullyQualifiedClassName(reference, isList);
         } else if ("array".equals(propertyType) && propertyJsonObject.has("items") && propertyJsonObject.getAsJsonObject("items").has("$ref")) {
             final String javaType = propertyJsonObject.getAsJsonObject("items").get("$ref").getAsString().replace("#/definitions/", "");
             if (!possibleReferencesForProperties.contains(javaType)) {
@@ -109,18 +110,18 @@ public class SwaggerDefinitionProperty extends Stringable {
             if (StringUtils.isNotBlank(importPackage)) {
                 importPackages.add(importPackage);
             }
-            return String.format("java.util.List<%s>", javaType);
+            return new FullyQualifiedClassName(javaType, true);
         } else if ("array".equals(propertyType) && propertyJsonObject.has("items") && propertyJsonObject.getAsJsonObject("items").has("type")) {
             final String javaType = propertyJsonObject.getAsJsonObject("items").get("type").getAsString();
             if ("string".equals(javaType)) {
-                return "java.util.List<String>";
+                return new FullyQualifiedClassName("String", true);
             } else if ("integer".equals(javaType)) {
-                return "java.util.List<Integer>";
+                return new FullyQualifiedClassName("Integer", true);
             }
         } else {
             final String converted = convertSwaggerPrimitiveToJava(propertyType);
             if (converted != null) {
-                return converted;
+                return new FullyQualifiedClassName(converted, false);
             }
         }
 

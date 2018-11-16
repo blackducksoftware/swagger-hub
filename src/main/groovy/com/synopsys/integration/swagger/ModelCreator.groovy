@@ -41,7 +41,7 @@ import org.apache.commons.lang3.StringUtils
 import java.nio.charset.StandardCharsets
 
 public class ModelCreator {
-    public static final String BASE_DIRECTORY_ENVIRONMENT_VARIABLE = "SWAGGER_HUB_BASE_DIRECTORY";
+    public static final String BASE_DIRECTORY_ENVIRONMENT_VARIABLE = "SWAGGER_BLACK_DUCK_BASE_DIRECTORY";
     public static final String DEFAULT_BASE_DIRECTORY = "/tmp";
 
     public static final String DIRECTORY_PREFIX = "/com/synopsys/integration/blackduck/api/generated";
@@ -63,20 +63,20 @@ public class ModelCreator {
     public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_4.8.2_manually_edited.json").toURI());
+        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_5.0.0_manually_edited.json").toURI());
         final FileInputStream jsonFileInputStream = new FileInputStream(jsonFile);
         final InputStreamReader jsonInputStreamReader = new InputStreamReader(jsonFileInputStream, StandardCharsets.UTF_8);
 
         final JsonParser jsonParser = new JsonParser();
         final JsonObject swaggerJson = jsonParser.parse(jsonInputStreamReader).getAsJsonObject();
 
-        final File definitionsThatAreHubViews = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_hub_views.txt").toURI());
-        List<String> definitionThatAreHubViewsLines = definitionsThatAreHubViews.readLines()
-        Set<String> definitionNamesToExtendHubView = new HashSet<>(definitionThatAreHubViewsLines);
+        final File definitionsThatAreBlackDuckViews = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_black_duck_views.txt").toURI());
+        List<String> definitionThatAreBlackDuckViewsLines = definitionsThatAreBlackDuckViews.readLines()
+        Set<String> definitionNamesToExtendBlackDuckView = new HashSet<>(definitionThatAreBlackDuckViewsLines);
 
-        final File definitionsThatAreHubResponses = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_hub_responses.txt").toURI());
-        List<String> definitionThatAreHubResponsesLines = definitionsThatAreHubResponses.readLines()
-        Set<String> definitionNamesToExtendHubResponse = new HashSet<>(definitionThatAreHubResponsesLines);
+        final File definitionsThatAreBlackDuckResponses = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_black_duck_responses.txt").toURI());
+        List<String> definitionThatAreBlackDuckResponsesLines = definitionsThatAreBlackDuckResponses.readLines()
+        Set<String> definitionNamesToExtendBlackDuckResponse = new HashSet<>(definitionThatAreBlackDuckResponsesLines);
 
         final File definitionsWithLinksFile = new File(ModelCreator.class.getClassLoader().getResource("definitions_with_links.txt").toURI());
         List<DefinitionLinkEntry> linkEntries = []
@@ -116,7 +116,7 @@ public class ModelCreator {
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
         final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getDefinitionsFromJson(swaggerJson)
         println allObjectDefinitions.keySet().size()
-        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, swaggerEnumsParser.winningNamesToValues.keySet())
+        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, swaggerEnumsParser.winningNamesToValues.keySet())
 
         final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
         final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson, apiPathsToIgnore, overrideEntries);
@@ -130,9 +130,9 @@ public class ModelCreator {
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(ModelCreator.class, "/");
         configuration.setDefaultEncoding("UTF-8");
-        Template discoveryTemplate = configuration.getTemplate("hubDiscovery.ftl");
-        Template enumTemplate = configuration.getTemplate("hubEnum.ftl");
-        Template viewTemplate = configuration.getTemplate("hubView.ftl");
+        Template discoveryTemplate = configuration.getTemplate("blackDuckDiscovery.ftl");
+        Template enumTemplate = configuration.getTemplate("blackDuckEnum.ftl");
+        Template viewTemplate = configuration.getTemplate("blackDuckView.ftl");
 
         File discoveryBaseDirectory = new File(getBaseDirectory(), ModelCreator.DISCOVERY_DIRECTORY);
         File enumBaseDirectory = new File(getBaseDirectory(), ModelCreator.ENUM_DIRECTORY);
@@ -148,7 +148,7 @@ public class ModelCreator {
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.winningNamesToValues);
 
         ComponentCreator componentCreator = new ComponentCreator();
-        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendHubView, definitionNamesToExtendHubResponse, definitionLinks, swaggerEnumsParser);
+        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, definitionLinks, swaggerEnumsParser);
     }
 
     public static File getBaseDirectory() {
@@ -176,9 +176,9 @@ public class ModelCreator {
             }
             imports.add(importPackage);
             imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "LinkResponse");
-            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubPath");
-            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubPathSingleResponse");
-            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "HubPathMultipleResponses");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "BlackDuckPath");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "BlackDuckPathSingleResponse");
+            imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + "BlackDuckPathMultipleResponses");
 
             Map<String, Object> linkModel = new HashMap<>();
             linkModel.put("label", it.path);
@@ -186,9 +186,9 @@ public class ModelCreator {
             linkModel.put("resultClass", it.resultClass);
             if (it.hasManyResults) {
                 linkModel.put("hasMultipleResults", true);
-                linkModel.put("linkType", "HubPathMultipleResponses<${it.resultClass}>");
+                linkModel.put("linkType", "BlackDuckPathMultipleResponses<${it.resultClass}>");
             } else {
-                linkModel.put("linkType", "HubPathSingleResponse<${it.resultClass}>");
+                linkModel.put("linkType", "BlackDuckPathSingleResponse<${it.resultClass}>");
             }
             links.add(linkModel);
         }

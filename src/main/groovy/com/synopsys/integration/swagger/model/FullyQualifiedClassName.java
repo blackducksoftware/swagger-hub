@@ -23,15 +23,25 @@
  */
 package com.synopsys.integration.swagger.model;
 
-import java.util.ArrayList;
-import java.util.List;
+public class FullyQualifiedClassName {
+    private final String rawType;
+    private final boolean isList;
 
-import com.google.gson.JsonObject;
-import com.synopsys.integration.util.Stringable;
+    public FullyQualifiedClassName(final String rawType, final boolean isList) {
+        this.rawType = rawType;
+        this.isList = isList;
+    }
 
-public class SwaggerDefinition extends Stringable {
-    public String definitionName;
-    public List<SwaggerDefinitionProperty> definitionProperties = new ArrayList<>();
-    public JsonObject definitionJsonObject;
+    public String getFullyQualifiedClassName() {
+        return isList ? String.format("java.util.List<%s>", rawType) : rawType;
+    }
+
+    public String getRawType() {
+        return rawType;
+    }
+
+    public boolean isList() {
+        return isList;
+    }
 
 }
