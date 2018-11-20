@@ -116,6 +116,8 @@ public class ComponentCreator {
                     }
                 }
 
+                fields.sort { x, y -> x.get("name") <=> y.get("name") }
+
                 List sortedImports = new ArrayList<>(imports);
                 Collections.sort(sortedImports);
                 model.put("imports", sortedImports)
