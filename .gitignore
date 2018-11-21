@@ -7,7 +7,9 @@
 .project
 bin/
 out/
+.idea/
 
 # build tool
 .gradle/
 build/
+
