@@ -41,8 +41,8 @@ public class SwaggerDefinitionsParser {
 
     private final SwaggerPropertiesParser swaggerPropertiesParser
 
-    def definitionNamesReferencedButNotProcessed = new HashSet<String>();
-    def allProcessedDefintionNames = new HashSet<String>();
+    Set<String> definitionNamesReferencedButNotProcessed = new HashSet<String>();
+    Set<String> allProcessedDefintionNames = new HashSet<String>();
 
     public SwaggerDefinitionsParser(SwaggerPropertiesParser swaggerPropertiesParser) {
         this.swaggerPropertiesParser = swaggerPropertiesParser

@@ -38,8 +38,8 @@ class SwaggerPropertiesParser {
 
     private final SwaggerEnumsParser swaggerEnumsParser
 
-    def propertyTypeToFormats = new HashMap<String, Set<String>>()
-    def unknownPropertyFields = new HashSet<String>()
+    Map<String, Set<String>> propertyTypeToFormats = new HashMap<String, Set<String>>()
+    Set<String> unknownPropertyFields = new HashSet<>()
 
     public SwaggerPropertiesParser(SwaggerEnumsParser swaggerEnumsParser) {
         this.swaggerEnumsParser = swaggerEnumsParser
