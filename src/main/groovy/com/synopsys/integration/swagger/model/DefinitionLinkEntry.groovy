@@ -28,4 +28,16 @@ class DefinitionLinkEntry {
     String link
     boolean canHaveManyResults
     String resultClass
+
+    static DefinitionLinkEntry fromArray(final String[] pieces) {
+        final DefinitionLinkEntry linkEntry = new DefinitionLinkEntry()
+        linkEntry.setDefinitionName(pieces[0])
+        linkEntry.setLink(pieces[1])
+        if (pieces.size() == 4) {
+            linkEntry.setCanHaveManyResults(Boolean.valueOf(pieces[2]))
+            linkEntry.setResultClass(pieces[3])
+        }
+
+        return linkEntry;
+    }
 }

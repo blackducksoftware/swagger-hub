@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,8 +37,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.gson.JsonObject;
@@ -53,19 +52,29 @@ import com.synopsys.integration.swagger.parser.SwaggerDefinitionsParser;
 import com.synopsys.integration.swagger.parser.SwaggerEnumsParser;
 import com.synopsys.integration.swagger.parser.SwaggerPathsParser;
 import com.synopsys.integration.swagger.parser.SwaggerPropertiesParser;
+import com.synopsys.integration.swagger.util.ResourceUtil;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 
 public class ModelCreator {
-    private static final String API_DOCS_RESOURCE_PATH = "/api-docs_5.0.0_manually_edited.json";
-    private static final String VIEW_DEFINITIONS_RESOURCE_PATH = "/definitions_that_are_black_duck_views.txt";
-    private static final String RESPONSE_DEFINITIONS_RESOURCE_PATH = "/definitions_that_are_black_duck_responses.txt";
-    private static final String DEFINITIONS_WITH_LINKS_RESOURCE_PATH = "/definitions_with_links.txt";
-    private static final String API_PATH_OVERRIDES_RESOURCE_PATH = "/api_path_overrides.txt";
-    private static final String API_PATH_IGNORE_RESOURCE_PATH = "/api_path_ignore.txt";
+    // Resources
+    public static final String API_DOCS = "api-docs/api-docs_5.0.0_manually_edited.json";
 
+    public static final String OVERRIDES_RESOURCE_PATH = "overrides/";
+    public static final String API_PATH_IGNORE = OVERRIDES_RESOURCE_PATH + "api_path_ignore.txt";
+    public static final String API_PATH_OVERRIDES = OVERRIDES_RESOURCE_PATH + "api_path_overrides.txt";
+    public static final String RESPONSE_DEFINITIONS = OVERRIDES_RESOURCE_PATH + "definitions_that_are_black_duck_responses.txt";
+    public static final String VIEW_DEFINITIONS = OVERRIDES_RESOURCE_PATH + "definitions_that_are_black_duck_views.txt";
+    public static final String DEFINITIONS_WITH_LINKS = OVERRIDES_RESOURCE_PATH + "definitions_with_links.txt";
+
+    public static final String TEMPLATES_RESOURCE_PATH = "templates/";
+    public static final String BLACK_DUCK_DISCOVERY = TEMPLATES_RESOURCE_PATH + "blackDuckDiscovery.ftl";
+    public static final String BLACK_DUCK_ENUM = TEMPLATES_RESOURCE_PATH + "blackDuckEnum.ftl";
+    public static final String BLACK_DUCK_VIEW = TEMPLATES_RESOURCE_PATH + "blackDuckView.ftl";
+
+    // Other stuff
     public static final String BASE_DIRECTORY_ENVIRONMENT_VARIABLE = "SWAGGER_BLACK_DUCK_BASE_DIRECTORY";
     public static final String DEFAULT_BASE_DIRECTORY = "/tmp";
 
@@ -88,65 +97,50 @@ public class ModelCreator {
     public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final ModelCreator modelCreator = new ModelCreator();
+        final ModelCreator modelCreator = new ModelCreator(new ResourceUtil());
         modelCreator.generateModel();
     }
 
-    public ModelCreator() {
+    private final ResourceUtil resourceUtil;
 
+    public ModelCreator(final ResourceUtil resourceUtil) {
+        this.resourceUtil = resourceUtil;
+    }
+
+    private boolean isOverrideLineValid(final String line) {
+        return StringUtils.isNotBlank(line) && !line.startsWith("#");
+    }
+
+    private String[] mapLineToPieces(final String line) {
+        return line.trim().split(",");
     }
 
     public void generateModel() throws IOException, TemplateException {
-        final InputStream swaggerJsonInputStream = getClass().getResourceAsStream(API_DOCS_RESOURCE_PATH);
-        final Reader jsonInputStreamReader = new InputStreamReader(swaggerJsonInputStream, StandardCharsets.UTF_8);
-
+        final InputStream swaggerJsonInputStream = resourceUtil.getResourceAsStream(API_DOCS);
+        final Reader jsonInputStreamReader = new InputStreamReader(swaggerJsonInputStream, ResourceUtil.DEFAULT_RESOURCE_ENCODING);
         final JsonParser jsonParser = new JsonParser();
         final JsonObject swaggerJson = jsonParser.parse(jsonInputStreamReader).getAsJsonObject();
 
-        final InputStream viewDefinitionsInputStream = getClass().getResourceAsStream(VIEW_DEFINITIONS_RESOURCE_PATH);
-        final List<String> definitionThatAreBlackDuckViewsLines = IOUtils.readLines(viewDefinitionsInputStream, StandardCharsets.UTF_8);
+        final List<String> definitionThatAreBlackDuckViewsLines = resourceUtil.getLinesFromResource(VIEW_DEFINITIONS);
         final Set<String> definitionNamesToExtendBlackDuckView = new HashSet<>(definitionThatAreBlackDuckViewsLines);
 
-        final InputStream responseDefinitionsInputStream = getClass().getResourceAsStream(RESPONSE_DEFINITIONS_RESOURCE_PATH);
-        final List<String> definitionThatAreBlackDuckResponsesLines = IOUtils.readLines(responseDefinitionsInputStream, StandardCharsets.UTF_8);
+        final List<String> definitionThatAreBlackDuckResponsesLines = resourceUtil.getLinesFromResource(RESPONSE_DEFINITIONS);
         final Set<String> definitionNamesToExtendBlackDuckResponse = new HashSet<>(definitionThatAreBlackDuckResponsesLines);
 
-        final InputStream definitionsWithLinksInputStream = getClass().getResourceAsStream(DEFINITIONS_WITH_LINKS_RESOURCE_PATH);
-        final List<String> definitionsWithLinksLines = IOUtils.readLines(definitionsWithLinksInputStream, StandardCharsets.UTF_8);
+        final List<DefinitionLinkEntry> linkEntries = resourceUtil.getLinesFromResource(DEFINITIONS_WITH_LINKS).stream()
+                                                          .filter(this::isOverrideLineValid)
+                                                          .map(this::mapLineToPieces)
+                                                          .map(DefinitionLinkEntry::fromArray)
+                                                          .collect(Collectors.toList());
 
-        final List<DefinitionLinkEntry> linkEntries = new ArrayList<>();
-        for (final String line : definitionsWithLinksLines) {
-            if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
-                final String[] pieces = line.split(",");
-                final DefinitionLinkEntry linkEntry = new DefinitionLinkEntry();
-                linkEntry.setDefinitionName(pieces[0]);
-                linkEntry.setLink(pieces[1]);
-                if (pieces.length == 4) {
-                    linkEntry.setCanHaveManyResults(Boolean.valueOf(pieces[2]));
-                    linkEntry.setResultClass(pieces[3]);
-                }
-                linkEntries.add(linkEntry);
-            }
-        }
+        final Map<String, String> overrideEntries = resourceUtil.getLinesFromResource(API_PATH_OVERRIDES).stream()
+                                                        .filter(this::isOverrideLineValid)
+                                                        .map(this::mapLineToPieces)
+                                                        .collect(Collectors.toMap((pieces) -> pieces[0], (pieces) -> pieces[1]));
 
-        final InputStream apiPathOverridesInputStream = getClass().getResourceAsStream(API_PATH_OVERRIDES_RESOURCE_PATH);
-        final List<String> apiPathOverrideLines = IOUtils.readLines(apiPathOverridesInputStream, StandardCharsets.UTF_8);
-        final Map<String, String> overrideEntries = new HashMap<>();
-        for (final String line : apiPathOverrideLines) {
-            if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
-                final String[] pieces = line.split(",");
-                overrideEntries.put(pieces[0], pieces[1]);
-            }
-        }
-
-        final InputStream apiPathIgnoreFileInputStream = getClass().getResourceAsStream(API_PATH_IGNORE_RESOURCE_PATH);
-        final List<String> apiPathIgnoreFileLines = IOUtils.readLines(apiPathIgnoreFileInputStream, StandardCharsets.UTF_8);
-        final Set<String> apiPathsToIgnore = new HashSet<>();
-        for (final String line : apiPathIgnoreFileLines) {
-            if (StringUtils.isNotBlank(line) && !line.startsWith("#")) {
-                apiPathsToIgnore.add(StringUtils.trim(line));
-            }
-        }
+        final Set<String> apiPathsToIgnore = resourceUtil.getLinesFromResource(API_PATH_IGNORE).stream()
+                                                 .filter(this::isOverrideLineValid)
+                                                 .collect(Collectors.toSet());
 
         final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser();
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser);
@@ -167,10 +161,10 @@ public class ModelCreator {
 
         final Configuration configuration = new Configuration(Configuration.VERSION_2_3_23);
         configuration.setClassForTemplateLoading(ModelCreator.class, "/");
-        configuration.setDefaultEncoding("UTF-8");
-        final Template discoveryTemplate = configuration.getTemplate("blackDuckDiscovery.ftl");
-        final Template enumTemplate = configuration.getTemplate("blackDuckEnum.ftl");
-        final Template viewTemplate = configuration.getTemplate("blackDuckView.ftl");
+        configuration.setDefaultEncoding(ResourceUtil.DEFAULT_RESOURCE_ENCODING.toString());
+        final Template discoveryTemplate = configuration.getTemplate(BLACK_DUCK_DISCOVERY);
+        final Template enumTemplate = configuration.getTemplate(BLACK_DUCK_ENUM);
+        final Template viewTemplate = configuration.getTemplate(BLACK_DUCK_VIEW);
 
         final File discoveryBaseDirectory = new File(getBaseDirectory(), ModelCreator.DISCOVERY_DIRECTORY);
         final File enumBaseDirectory = new File(getBaseDirectory(), ModelCreator.ENUM_DIRECTORY);
