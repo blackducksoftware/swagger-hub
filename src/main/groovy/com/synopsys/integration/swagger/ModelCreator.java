@@ -97,7 +97,8 @@ public class ModelCreator {
     public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final ModelCreator modelCreator = new ModelCreator(new ResourceUtil());
+        final ResourceUtil resourceUtil = new ResourceUtil();
+        final ModelCreator modelCreator = new ModelCreator(resourceUtil);
         modelCreator.generateModel();
     }
 
@@ -115,7 +116,7 @@ public class ModelCreator {
         return line.trim().split(",");
     }
 
-    public void generateModel() throws IOException, TemplateException {
+    private void generateModel() throws IOException, TemplateException {
         final InputStream swaggerJsonInputStream = resourceUtil.getResourceAsStream(API_DOCS);
         final Reader jsonInputStreamReader = new InputStreamReader(swaggerJsonInputStream, ResourceUtil.DEFAULT_RESOURCE_ENCODING);
         final JsonParser jsonParser = new JsonParser();
@@ -142,6 +143,9 @@ public class ModelCreator {
                                                  .filter(this::isOverrideLineValid)
                                                  .collect(Collectors.toSet());
 
+        final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
+        final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson, apiPathsToIgnore, overrideEntries);
+
         final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser();
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser);
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
@@ -149,10 +153,6 @@ public class ModelCreator {
         System.out.println(allObjectDefinitions.size());
         final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse,
             swaggerEnumsParser.getWinningNamesToValues().keySet());
-
-        final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
-        final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson, apiPathsToIgnore, overrideEntries);
-
         logPossibleErrors(swaggerDefinitionsParser, swaggerPropertiesParser, allObjectDefinitions);
 
         final Set<String> possibleReferencesForProperties = new HashSet<>();
@@ -171,11 +171,12 @@ public class ModelCreator {
         final File viewBaseDirectory = new File(getBaseDirectory(), ModelCreator.VIEW_DIRECTORY);
         final File responseBaseDirectory = new File(getBaseDirectory(), ModelCreator.RESPONSE_DIRECTORY);
         final File modelBaseDirectory = new File(getBaseDirectory(), ModelCreator.COMPONENT_DIRECTORY);
-        discoveryBaseDirectory.mkdirs();
-        enumBaseDirectory.mkdirs();
-        viewBaseDirectory.mkdirs();
-        responseBaseDirectory.mkdirs();
-        modelBaseDirectory.mkdirs();
+        createDirectory(discoveryBaseDirectory);
+        createDirectory(enumBaseDirectory);
+        createDirectory(viewBaseDirectory);
+        createDirectory(responseBaseDirectory);
+        createDirectory(modelBaseDirectory);
+
         createDiscoveryFile(discoveryBaseDirectory, discoveryTemplate, apiPaths, definitionLinks);
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.getWinningNamesToValues());
 
@@ -185,7 +186,13 @@ public class ModelCreator {
                 swaggerEnumsParser);
     }
 
-    public static File getBaseDirectory() {
+    private void createDirectory(final File file) {
+        if (file.mkdir()) {
+            System.out.println(String.format("Failed to create directories: %s", file.getAbsolutePath()));
+        }
+    }
+
+    private File getBaseDirectory() {
         String baseDirectory = System.getenv(BASE_DIRECTORY_ENVIRONMENT_VARIABLE);
         if (StringUtils.isBlank(baseDirectory)) {
             baseDirectory = DEFAULT_BASE_DIRECTORY;
@@ -193,7 +200,7 @@ public class ModelCreator {
         return new File(baseDirectory);
     }
 
-    public static void createDiscoveryFile(final File baseDirectory, final Template template, final List<ApiPath> apiPaths, final DefinitionLinks definitionLinks) throws IOException, TemplateException {
+    private void createDiscoveryFile(final File baseDirectory, final Template template, final List<ApiPath> apiPaths, final DefinitionLinks definitionLinks) throws IOException, TemplateException {
         final File discoveryFile = new File(baseDirectory, "ApiDiscovery.java");
 
         final Map<String, Object> model = new HashMap<>();
@@ -235,7 +242,7 @@ public class ModelCreator {
         template.process(model, fileWriter);
     }
 
-    public static void createEnumFiles(final File baseDirectory, final Template template, final Map<String, List<String>> enumNameToValues) throws IOException, TemplateException {
+    private void createEnumFiles(final File baseDirectory, final Template template, final Map<String, List<String>> enumNameToValues) throws IOException, TemplateException {
         for (final Map.Entry<String, List<String>> enumEntry : enumNameToValues.entrySet()) {
             final String enumName = enumEntry.getKey();
             final List<String> enumValues = enumEntry.getValue();
