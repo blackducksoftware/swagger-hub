@@ -11,5 +11,6 @@ EndUserLicenseAgreementView
 FilterView
 HealthCheckStatusView
 LegacyFilterView
+RemediationOptionsView
 UserCommentView
 VersionRiskProfileView
