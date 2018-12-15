@@ -14,7 +14,7 @@ version = '0.0.1-SNAPSHOT'
 apply plugin: 'com.blackducksoftware.integration.solution'
 
 dependencies {
-    implementation 'com.blackducksoftware.integration:integration-common:15.0.0'
+    implementation 'com.blackducksoftware.integration:integration-common:15.2.0'
 
     implementation 'org.freemarker:freemarker:2.3.23'
     implementation 'org.codehaus.groovy:groovy-all:2.4.12'

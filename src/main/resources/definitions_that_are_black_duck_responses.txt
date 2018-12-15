@@ -8,7 +8,6 @@ CurrentVersionView
 CweView
 DashboardSummaryView
 EndUserLicenseAgreementView
-FilterView
 HealthCheckStatusView
 LegacyFilterView
 RemediationOptionsView

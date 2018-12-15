@@ -63,7 +63,7 @@ public class ModelCreator {
     public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_5.0.0_manually_edited.json").toURI());
+        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_2018.11.1.json").toURI());
         final FileInputStream jsonFileInputStream = new FileInputStream(jsonFile);
         final InputStreamReader jsonInputStreamReader = new InputStreamReader(jsonFileInputStream, StandardCharsets.UTF_8);
 
@@ -111,6 +111,10 @@ public class ModelCreator {
             }
         }
 
+        final File definitionsThatImplementBuildable = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_buildable.txt").toURI());
+        List<String> definitionsThatImplementBuildableLines = definitionsThatImplementBuildable.readLines()
+        Set<String> definitionNamesThatImplementBuildable = new HashSet<>(definitionsThatImplementBuildableLines);
+
         final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser()
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser)
         final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
@@ -148,7 +152,7 @@ public class ModelCreator {
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.winningNamesToValues);
 
         ComponentCreator componentCreator = new ComponentCreator();
-        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, definitionLinks, swaggerEnumsParser);
+        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, definitionNamesThatImplementBuildable, definitionLinks, swaggerEnumsParser);
     }
 
     public static File getBaseDirectory() {

@@ -10,7 +10,7 @@ import ${import};
 </#list>
 
 //this file should not be edited - if changes are necessary, the generator should be updated, then this file should be re-created
-public class ${className} extends ${baseClass} {
+public class ${className} extends ${baseClass} <#if buildable??>implements Buildable </#if>{
 <#if hasLinksWithResults??>
     public static final Map<String, LinkResponse> links = new HashMap<>();
 
@@ -41,6 +41,12 @@ public class ${className} extends ${baseClass} {
     private ${field.type} ${field.name};
 </#list>
 
+<#if buildable??>
+    public static ${className}Builder newBuilder() {
+        return new ${className}Builder();
+    }
+
+</#if>
 <#list classFields as field>
     public ${field.type} get${field.name?cap_first}() {
         return ${field.name};

@@ -8,7 +8,9 @@ ComponentView
 ExternalExtensionConfigValueView
 ExternalExtensionUserView
 ExternalExtensionView
+FilterView
 IssueView
+LicenseFamilyView
 LicenseTextView
 LicenseView
 MatchedFileView
@@ -21,6 +23,9 @@ PolicyStatusView
 ProjectDashboardRiskAmalgamation
 ProjectVersionView
 ProjectView
+RegistrationAttributesInternalView
+RegistrationSummaryInternalView
+RegistrationView
 ReportView
 RiskProfileView
 RoleView

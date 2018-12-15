@@ -36,7 +36,11 @@ public class ComponentCreator {
                                 final Template template,
                                 final List<SwaggerDefinition> swaggerDefinitions,
                                 final Set<String> possibleReferencesForProperties,
-                                final Set<String> definitionNamesToExtendBlackDuckView, final Set<String> definitionNamesToExtendBlackDuckResponse, final DefinitionLinks definitionLinks, final SwaggerEnumsParser swaggerEnumsParser) {
+                                final Set<String> definitionNamesToExtendBlackDuckView,
+                                final Set<String> definitionNamesToExtendBlackDuckResponse,
+                                final Set<String> definitionNamesToImplementBuildable,
+                                final DefinitionLinks definitionLinks,
+                                final SwaggerEnumsParser swaggerEnumsParser) {
         swaggerDefinitions.each {
             try {
                 File viewFile = baseDirectory
@@ -57,6 +61,11 @@ public class ComponentCreator {
                 FreemarkerComponent freemarkerComponent = new FreemarkerComponent(imports, freemarkerComponentType)
                 final Map<String, Object> model = new HashMap<>();
                 model.put("className", it.definitionName);
+                if (definitionNamesToImplementBuildable.contains(it.definitionName)) {
+                    model.put("buildable", true);
+                    imports.add("com.synopsys.integration.util.Buildable");
+                    imports.add(ModelCreator.API_CORE_PACKAGE_PREFIX + "." + it.definitionName + "Builder");
+                }
                 model.put("baseClass", freemarkerComponent.baseClass);
                 model.put("viewPackage", freemarkerComponent.viewPackage)
 
