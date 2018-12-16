@@ -53,6 +53,9 @@ class SwaggerPropertiesParser {
                 String propertyName = property.getKey();
                 if (!property.getValue().isJsonObject()) {
                     throw new Exception("each property should be an object but ${propertyName} was not")
+                } else if ("_meta".equals(propertyName)) {
+                    println "ignored _meta on ${definitionName} - make sure it extends BlackDuckView"
+                    continue;
                 }
                 JsonObject propertyJsonObject = property.getValue().getAsJsonObject()
                 SwaggerDefinitionProperty swaggerDefinitionProperty = new SwaggerDefinitionProperty()
