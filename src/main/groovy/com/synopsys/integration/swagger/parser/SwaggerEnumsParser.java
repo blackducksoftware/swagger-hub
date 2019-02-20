@@ -1,7 +1,7 @@
 /**
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -47,6 +47,7 @@ public class SwaggerEnumsParser {
         }
         Collections.sort(enumValues);
         String enumName = definitionName.replaceAll("(?i)view$", "");
+        enumName = enumName.replaceFirst("V[0-9]+", "");
         enumName += StringUtils.capitalize(propertyName.replaceAll("(?i)type$", ""));
         if (enumName.toUpperCase().endsWith("TYPES")) {
             enumName = enumName.substring(0, enumName.length() - 1);

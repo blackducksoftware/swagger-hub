@@ -1,7 +1,7 @@
 /*
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -49,6 +49,7 @@ class SwaggerPathsParser {
                                     int lastSlashIndex = ref.lastIndexOf('/')
                                     int lastQuoteIndex = ref.lastIndexOf('"')
                                     String resultClass = ref[(lastSlashIndex + 1)..lastQuoteIndex]
+                                    resultClass = resultClass.replaceFirst(/V[0-9]+/, '')
                                     boolean hasManyResults = false
                                     if (resultClass.contains(SwaggerDefinitionsParser.CONTAINER_START_MARKER) && resultClass.contains(SwaggerDefinitionsParser.CONTAINER_END_MARKER)) {
                                         int start = resultClass.lastIndexOf(SwaggerDefinitionsParser.CONTAINER_START_MARKER) + 1

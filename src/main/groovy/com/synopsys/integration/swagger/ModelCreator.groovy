@@ -1,7 +1,7 @@
 /*
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,17 +26,14 @@ package com.synopsys.integration.swagger
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.synopsys.integration.swagger.creator.ComponentCreator
-import com.synopsys.integration.swagger.model.ApiPath
-import com.synopsys.integration.swagger.model.DefinitionLinkEntry
-import com.synopsys.integration.swagger.model.DefinitionLinks
-import com.synopsys.integration.swagger.model.SwaggerDefinition
+import com.synopsys.integration.swagger.model.*
 import com.synopsys.integration.swagger.parser.SwaggerDefinitionsParser
 import com.synopsys.integration.swagger.parser.SwaggerEnumsParser
 import com.synopsys.integration.swagger.parser.SwaggerPathsParser
 import com.synopsys.integration.swagger.parser.SwaggerPropertiesParser
 import freemarker.template.Configuration
 import freemarker.template.Template
-import org.apache.commons.lang3.StringUtils
+import org.apache.commons.io.IOUtils
 
 import java.nio.charset.StandardCharsets
 
@@ -53,74 +50,65 @@ public class ModelCreator {
 
     public static final String API_CORE_PACKAGE_PREFIX = "com.synopsys.integration.blackduck.api.core";
     public static final String GENERATED_PACKAGE_PREFIX = "com.synopsys.integration.blackduck.api.generated";
+    public static final String MANUAL_PACKAGE_PREFIX = "com.synopsys.integration.blackduck.api.manual";
     public static final String DISCOVERY_PACKAGE = GENERATED_PACKAGE_PREFIX + ".discovery";
     public static final String ENUM_PACKAGE = GENERATED_PACKAGE_PREFIX + ".enumeration";
     public static final String VIEW_PACKAGE_SUFFIX = ".view";
     public static final String RESPONSE_PACKAGE_SUFFIX = ".response";
     public static final String COMPONENT_PACKAGE_SUFFIX = ".component";
-    public static final String VIEW_PACKAGE = GENERATED_PACKAGE_PREFIX + VIEW_PACKAGE_SUFFIX;
-    public static final String RESPONSE_PACKAGE = GENERATED_PACKAGE_PREFIX + RESPONSE_PACKAGE_SUFFIX;
-    public static final String COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
+    public static final String GENERATED_VIEW_PACKAGE = GENERATED_PACKAGE_PREFIX + VIEW_PACKAGE_SUFFIX;
+    public static final String GENERATED_RESPONSE_PACKAGE = GENERATED_PACKAGE_PREFIX + RESPONSE_PACKAGE_SUFFIX;
+    public static final String GENERATED_COMPONENT_PACKAGE = GENERATED_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
+    public static final String MANUAL_VIEW_PACKAGE = MANUAL_PACKAGE_PREFIX + VIEW_PACKAGE_SUFFIX;
+    public static final String MANUAL_RESPONSE_PACKAGE = MANUAL_PACKAGE_PREFIX + RESPONSE_PACKAGE_SUFFIX;
+    public static final String MANUAL_COMPONENT_PACKAGE = MANUAL_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_2018.11.1.json").toURI());
+        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_2018.12.0_manually_edited.json").toURI());
         final FileInputStream jsonFileInputStream = new FileInputStream(jsonFile);
         final InputStreamReader jsonInputStreamReader = new InputStreamReader(jsonFileInputStream, StandardCharsets.UTF_8);
 
         final JsonParser jsonParser = new JsonParser();
         final JsonObject swaggerJson = jsonParser.parse(jsonInputStreamReader).getAsJsonObject();
 
-        final File definitionsThatAreBlackDuckViews = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_black_duck_views.txt").toURI());
-        List<String> definitionThatAreBlackDuckViewsLines = definitionsThatAreBlackDuckViews.readLines()
-        Set<String> definitionNamesToExtendBlackDuckView = new HashSet<>(definitionThatAreBlackDuckViewsLines);
+        Set<String> definitionNamesToExtendBlackDuckView = new HashSet<>(getLines('definitions_that_are_black_duck_views.txt'));
+        Set<String> definitionNamesToExtendBlackDuckResponse = new HashSet<>(getLines('definitions_that_are_black_duck_responses.txt'));
+        Set<String> apiPathsToIgnore = new HashSet<>(getLines('api_path_ignore.txt'));
+        Set<String> definitionNamesThatImplementBuildable = new HashSet<>(getLines('definitions_that_are_buildable.txt'));
+        Set<String> definitionNamesMaintainedManually = new HashSet<>(getLines('definitions_that_are_maintained_manually.txt'));
 
-        final File definitionsThatAreBlackDuckResponses = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_black_duck_responses.txt").toURI());
-        List<String> definitionThatAreBlackDuckResponsesLines = definitionsThatAreBlackDuckResponses.readLines()
-        Set<String> definitionNamesToExtendBlackDuckResponse = new HashSet<>(definitionThatAreBlackDuckResponsesLines);
-
-        final File definitionsWithLinksFile = new File(ModelCreator.class.getClassLoader().getResource("definitions_with_links.txt").toURI());
-        List<DefinitionLinkEntry> linkEntries = []
-        definitionsWithLinksFile.eachLine { line ->
-            if (line && !line.startsWith('#')) {
-                String[] pieces = line.split(',')
-                def linkEntry = new DefinitionLinkEntry()
-                linkEntry.definitionName = pieces[0]
-                linkEntry.link = pieces[1]
-                if (pieces.length == 4) {
-                    linkEntry.canHaveManyResults = Boolean.valueOf(pieces[2])
-                    linkEntry.resultClass = pieces[3]
-                }
-                linkEntries.add(linkEntry)
+        List<DefinitionLinkEntry> linkEntries = getLines('definitions_with_links.txt').collect {
+            String[] pieces = it.split(',')
+            def linkEntry = new DefinitionLinkEntry()
+            linkEntry.definitionName = pieces[0]
+            linkEntry.link = pieces[1]
+            if (pieces.length == 4) {
+                linkEntry.canHaveManyResults = Boolean.valueOf(pieces[2])
+                linkEntry.resultClass = pieces[3]
             }
+
+            linkEntry
         }
 
-        final File apiPathOverridesFile = new File(ModelCreator.class.getClassLoader().getResource("api_path_overrides.txt").toURI());
-        Map<String, String> overrideEntries = [:]
-        apiPathOverridesFile.eachLine { line ->
-            if (line && !line.startsWith('#')) {
-                String[] pieces = line.split(',')
-                overrideEntries.put(pieces[0], pieces[1])
-            }
+        Map<String, String> overrideEntries = getLines('api_path_overrides.txt').collectEntries { line ->
+            String[] pieces = line.split(',')
+            [(pieces[0]): pieces[1]]
         }
 
-        final File apiPathIgnoreFile = new File(ModelCreator.class.getClassLoader().getResource("api_path_ignore.txt").toURI());
-        Set<String> apiPathsToIgnore = []
-        apiPathIgnoreFile.eachLine { line ->
-            if (line && !line.startsWith('#')) {
-                apiPathsToIgnore.add(StringUtils.trim(line));
+        DefinitionsWithManyVersions definitionsWithManyVersions = new DefinitionsWithManyVersions();
+        getLines('definitions_that_have_many_versions.txt').each { line ->
+            String[] pieces = line.split(',')
+            String preferredName = pieces[-1]
+            pieces.each { piece -> definitionsWithManyVersions.addDefinitionWithManyVersions(piece, preferredName)
             }
         }
-
-        final File definitionsThatImplementBuildable = new File(ModelCreator.class.getClassLoader().getResource("definitions_that_are_buildable.txt").toURI());
-        List<String> definitionsThatImplementBuildableLines = definitionsThatImplementBuildable.readLines()
-        Set<String> definitionNamesThatImplementBuildable = new HashSet<>(definitionsThatImplementBuildableLines);
 
         final SwaggerEnumsParser swaggerEnumsParser = new SwaggerEnumsParser()
         final SwaggerPropertiesParser swaggerPropertiesParser = new SwaggerPropertiesParser(swaggerEnumsParser)
-        final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser);
+        final SwaggerDefinitionsParser swaggerDefinitionsParser = new SwaggerDefinitionsParser(swaggerPropertiesParser, definitionsWithManyVersions);
         final Map<String, SwaggerDefinition> allObjectDefinitions = swaggerDefinitionsParser.getDefinitionsFromJson(swaggerJson)
         println allObjectDefinitions.keySet().size()
-        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, swaggerEnumsParser.winningNamesToValues.keySet())
+        final DefinitionLinks definitionLinks = new DefinitionLinks(linkEntries, allObjectDefinitions.keySet(), definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, swaggerEnumsParser.winningNamesToValues.keySet(), definitionNamesMaintainedManually)
 
         final SwaggerPathsParser swaggerPathsParser = new SwaggerPathsParser();
         final List<ApiPath> apiPaths = swaggerPathsParser.getPathsToResponses(swaggerJson, apiPathsToIgnore, overrideEntries);
@@ -152,7 +140,17 @@ public class ModelCreator {
         createEnumFiles(enumBaseDirectory, enumTemplate, swaggerEnumsParser.winningNamesToValues);
 
         ComponentCreator componentCreator = new ComponentCreator();
-        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, definitionNamesThatImplementBuildable, definitionLinks, swaggerEnumsParser);
+        componentCreator.createViewFiles(getBaseDirectory(), viewTemplate, new ArrayList<>(allObjectDefinitions.values()), possibleReferencesForProperties, definitionNamesToExtendBlackDuckView, definitionNamesToExtendBlackDuckResponse, definitionNamesThatImplementBuildable, definitionNamesMaintainedManually, definitionLinks, swaggerEnumsParser);
+    }
+
+    public static List<String> getLines(String resourceName) {
+        final InputStream inputStream = ModelCreator.class.getResourceAsStream("/${resourceName}");
+        List<String> allLines = IOUtils.readLines(inputStream, StandardCharsets.UTF_8);
+        return allLines.collect {
+            it?.trim()
+        }.findAll {
+            it && !it.startsWith('#')
+        }
     }
 
     public static File getBaseDirectory() {

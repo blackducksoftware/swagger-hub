@@ -1,7 +1,7 @@
 /**
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -38,10 +38,10 @@ public class DefinitionLinks {
     private final Map<String, Map<String, String>> namesToLinksToResultClasses = new HashMap<>();
     private final Map<String, String> namesToFullyQualifiedClassNames = new HashMap<>();
 
-    public DefinitionLinks(final List<DefinitionLinkEntry> linkEntries, final Set<String> allDefinitionNames, final Set<String> definitionNamesToExtendBlackDuckView, final Set<String> definitionNamesToExtendBlackDuckResponse,
-            final Set<String> enumNames) {
+    public DefinitionLinks(List<DefinitionLinkEntry> linkEntries, Set<String> allDefinitionNames, Set<String> definitionNamesToExtendBlackDuckView, Set<String> definitionNamesToExtendBlackDuckResponse,
+            Set<String> enumNames, Set<String> definitionNamesMaintainedManually) {
         linkEntries.forEach(linkEntry -> {
-            final String definitionName = linkEntry.getDefinitionName();
+            String definitionName = linkEntry.getDefinitionName();
 
             if (!namesToEntries.containsKey(definitionName)) {
                 namesToEntries.put(definitionName, new ArrayList<>());
@@ -51,8 +51,8 @@ public class DefinitionLinks {
             if (!namesToLinksToJavaConstants.containsKey(definitionName)) {
                 namesToLinksToJavaConstants.put(definitionName, new HashMap<>());
             }
-            final String link = linkEntry.getLink();
-            final String constant = convertLinkToJavaConstant(link);
+            String link = linkEntry.getLink();
+            String constant = convertLinkToJavaConstant(link);
             namesToLinksToJavaConstants.get(definitionName).put(link, constant);
 
             if (!namesToLinksToHasManyResults.containsKey(definitionName)) {
@@ -63,41 +63,54 @@ public class DefinitionLinks {
             if (!namesToLinksToResultClasses.containsKey(definitionName)) {
                 namesToLinksToResultClasses.put(definitionName, new HashMap<>());
             }
-            final String resultClass = linkEntry.getResultClass();
+            String resultClass = linkEntry.getResultClass();
             namesToLinksToResultClasses.get(definitionName).put(link, resultClass);
         });
 
         allDefinitionNames.forEach(definitionName -> {
-            if (definitionNamesToExtendBlackDuckView.contains(definitionName)) {
-                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.VIEW_PACKAGE, definitionName));
-            } else if (definitionNamesToExtendBlackDuckResponse.contains(definitionName)) {
-                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.RESPONSE_PACKAGE, definitionName));
+            String packagePrefix = null;
+            if (definitionNamesMaintainedManually.contains(definitionName)) {
+                if (definitionNamesToExtendBlackDuckView.contains(definitionName)) {
+                    packagePrefix = ModelCreator.MANUAL_VIEW_PACKAGE;
+                } else if (definitionNamesToExtendBlackDuckResponse.contains(definitionName)) {
+                    packagePrefix = ModelCreator.MANUAL_RESPONSE_PACKAGE;
+                } else {
+                    packagePrefix = ModelCreator.MANUAL_COMPONENT_PACKAGE;
+                }
             } else {
-                namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", ModelCreator.COMPONENT_PACKAGE, definitionName));
+                if (definitionNamesToExtendBlackDuckView.contains(definitionName)) {
+                    packagePrefix = ModelCreator.GENERATED_VIEW_PACKAGE;
+                } else if (definitionNamesToExtendBlackDuckResponse.contains(definitionName)) {
+                    packagePrefix = ModelCreator.GENERATED_RESPONSE_PACKAGE;
+                } else {
+                    packagePrefix = ModelCreator.GENERATED_COMPONENT_PACKAGE;
+                }
             }
+
+            namesToFullyQualifiedClassNames.put(definitionName, String.format("%s.%s", packagePrefix, definitionName));
         });
         enumNames.forEach(enumName -> {
             namesToFullyQualifiedClassNames.put(enumName, String.format("%s.%s", ModelCreator.ENUM_PACKAGE, enumName));
         });
     }
 
-    public Map<String, String> getLinksToJavaConstants(final String definitionName) {
+    public Map<String, String> getLinksToJavaConstants(String definitionName) {
         return namesToLinksToJavaConstants.get(definitionName);
     }
 
-    public boolean canHaveManyResults(final String definitionName, final String link) {
+    public boolean canHaveManyResults(String definitionName, String link) {
         return namesToLinksToHasManyResults.get(definitionName).get(link);
     }
 
-    public String getResultClass(final String definitionName, final String link) {
+    public String getResultClass(String definitionName, String link) {
         return namesToLinksToResultClasses.get(definitionName).get(link);
     }
 
-    public String getFullyQualifiedClassName(final String name) {
+    public String getFullyQualifiedClassName(String name) {
         return namesToFullyQualifiedClassNames.get(name);
     }
 
-    private String convertLinkToJavaConstant(final String link) {
+    private String convertLinkToJavaConstant(String link) {
         return link.replaceAll("[^A-Za-z0-9]", "_").toUpperCase() + "_LINK";
     }
 

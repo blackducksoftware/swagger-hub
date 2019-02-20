@@ -5,6 +5,8 @@ ComponentDetailsView
 ComponentSearchResultView
 ComponentVersionView
 ComponentView
+CustomFieldObjectView
+CustomFieldView
 ExternalExtensionConfigValueView
 ExternalExtensionUserView
 ExternalExtensionView
@@ -18,9 +20,9 @@ NotificationView
 NotificationUserView
 OriginView
 PolicyRuleView
-PolicyRuleViewV2
 PolicyStatusView
 ProjectDashboardRiskAmalgamation
+ProjectMappingView
 ProjectVersionView
 ProjectView
 RegistrationAttributesInternalView
@@ -30,11 +32,11 @@ ReportView
 RiskProfileView
 RoleView
 RoleAssignmentView
+TagView
 UserGroupView
 UserView
 VersionBomComponentView
 VersionBomPolicyStatusView
-VulnerabilityV1View
-VulnerabilityV2View
+VulnerabilityView
 VulnerabilityWithRemediationView
 VulnerableComponentView

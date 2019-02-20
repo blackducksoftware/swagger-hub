@@ -1,7 +1,7 @@
 /**
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -79,6 +79,7 @@ public class SwaggerDefinitionProperty extends Stringable {
             }
         } else if (StringUtils.isNotBlank(ref)) {
             String reference = ref.replace("#/definitions/", "");
+            reference = reference.replaceFirst("V[0-9]+", "");
             reference = cleanReference(reference, OPTIONAL_START, OPTIONAL_END);
 
             String cleanedReference = reference;
@@ -102,7 +103,8 @@ public class SwaggerDefinitionProperty extends Stringable {
             }
             return new FullyQualifiedClassName(reference, isList);
         } else if ("array".equals(propertyType) && propertyJsonObject.has("items") && propertyJsonObject.getAsJsonObject("items").has("$ref")) {
-            final String javaType = propertyJsonObject.getAsJsonObject("items").get("$ref").getAsString().replace("#/definitions/", "");
+            String javaType = propertyJsonObject.getAsJsonObject("items").get("$ref").getAsString().replace("#/definitions/", "");
+            javaType = javaType.replaceFirst("V[0-9]+", "");
             if (!possibleReferencesForProperties.contains(javaType)) {
                 throw new Exception("Not a known java type: " + javaType + " in " + toString());
             }

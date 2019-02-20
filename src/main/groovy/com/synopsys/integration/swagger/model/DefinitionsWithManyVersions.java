@@ -23,21 +23,25 @@
  */
 package com.synopsys.integration.swagger.model;
 
-import com.synopsys.integration.util.Stringable;
+import java.util.HashSet;
+import java.util.Set;
 
-public class ApiPath extends Stringable {
-    public final String path;
-    public final boolean hasManyResults;
-    public final String resultClass;
+public class DefinitionsWithManyVersions {
+    private Set<String> definitionsWithManyVersions = new HashSet<>();
+    private Set<String> preferredDefinitionNames = new HashSet<>();
 
-    public ApiPath(final String path, final boolean hasManyResults, final String resultClass) {
-        this.path = path;
-        this.hasManyResults = hasManyResults;
-        this.resultClass = resultClass;
+    public void addDefinitionWithManyVersions(String definitionName, String preferredDefinitionName) {
+        definitionsWithManyVersions.add(definitionName);
+        preferredDefinitionNames.add(preferredDefinitionName);
     }
 
-    public String getJavaConstant() {
-        return path.replace("/api/", "").replaceAll("[^A-Za-z0-9]", "_").toUpperCase() + "_LINK";
+    public boolean shouldProcess(String definitionName) {
+        if (!definitionsWithManyVersions.contains(definitionName)) {
+            // is single definition
+            return true;
+        }
+
+        return preferredDefinitionNames.contains(definitionName);
     }
 
 }

@@ -1,0 +1,8 @@
+ComplexLicenseV1View,ComplexLicenseV2View
+ComponentVersionV4View,ComponentVersionV5View
+LicenseView,LicenseV5View
+OriginV4View,OriginV5View
+PolicyRuleView,PolicyRuleViewV2
+ProjectVersionV4View,ProjectVersionV5View
+VulnerabilityV1View,VulnerabilityV2View
+VulnerableComponentView,VulnerableComponentV6View

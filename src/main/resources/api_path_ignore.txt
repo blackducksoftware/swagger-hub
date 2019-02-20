@@ -1,3 +1,5 @@
 /api/
 /api/catalog-risk-profile-dashboard
 /api/risk-profile-dashboard
+/api/registration-attributes
+/api/registration-summary

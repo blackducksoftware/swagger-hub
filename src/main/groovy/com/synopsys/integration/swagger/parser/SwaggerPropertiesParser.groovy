@@ -1,7 +1,7 @@
 /*
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -50,7 +50,7 @@ class SwaggerPropertiesParser {
         if (definitionJsonObject.has("properties")) {
             JsonObject propertiesJsonObject = definitionJsonObject.get("properties").getAsJsonObject()
             for (final Map.Entry<String, JsonElement> property : propertiesJsonObject.entrySet()) {
-                String propertyName = property.getKey();
+                String propertyName = property.getKey().replaceFirst(/V[0-9]+/, '')
                 if (!property.getValue().isJsonObject()) {
                     throw new Exception("each property should be an object but ${propertyName} was not")
                 } else if ("_meta".equals(propertyName)) {

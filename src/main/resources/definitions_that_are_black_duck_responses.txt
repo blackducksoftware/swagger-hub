@@ -5,10 +5,12 @@ ComponentSearchResult
 ComponentVersionReferenceView
 ComponentVersionRiskView
 CurrentVersionView
+CustomFieldTypeView
 CweView
 DashboardSummaryView
 EndUserLicenseAgreementView
 HealthCheckStatusView
+JobStatisticsView
 LegacyFilterView
 RemediationOptionsView
 UserCommentView

@@ -1,7 +1,7 @@
 /*
  * swagger-hub
  *
- * Copyright (C) 2018 Black Duck Software, Inc.
+ * Copyright (C) 2019 Black Duck Software, Inc.
  * http://www.blackducksoftware.com/
  *
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -39,9 +39,10 @@ public class ComponentCreator {
                                 final Set<String> definitionNamesToExtendBlackDuckView,
                                 final Set<String> definitionNamesToExtendBlackDuckResponse,
                                 final Set<String> definitionNamesToImplementBuildable,
+                                final Set<String> definitionNamesMaintainedManually,
                                 final DefinitionLinks definitionLinks,
                                 final SwaggerEnumsParser swaggerEnumsParser) {
-        swaggerDefinitions.each {
+        swaggerDefinitions.findAll { !definitionNamesMaintainedManually.contains(it.definitionName) }.each {
             try {
                 File viewFile = baseDirectory
                 final Set imports = new HashSet<>()
@@ -108,21 +109,19 @@ public class ComponentCreator {
                 model.put("classFields", fields);
 
                 it.definitionProperties.each { property ->
-                    if (shouldProcessProperty(it.definitionName, property.name)) {
-                        Map<String, Object> propertyModel = new HashMap<>();
-                        propertyModel.put("name", property.name);
-                        propertyModel.put("snakeCaseName", property.name.replaceAll(/[A-Z]/) { m -> "_${m}" }.toUpperCase());
-                        FullyQualifiedClassName fullyQualifiedClassName = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
-                        String propertyType = fullyQualifiedClassName.fullyQualifiedClassName;
-                        String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
-                        if (StringUtils.isNotBlank(importPackage)) {
-                            imports.add(importPackage);
-                        }
-                        propertyModel.put("type", propertyType);
-                        propertyModel.put("rawType", fullyQualifiedClassName.rawType);
-                        propertyModel.put("isList", fullyQualifiedClassName.list);
-                        fields.add(propertyModel)
+                    Map<String, Object> propertyModel = new HashMap<>();
+                    propertyModel.put("name", property.name);
+                    propertyModel.put("snakeCaseName", property.name.replaceAll(/[A-Z]/) { m -> "_${m}" }.toUpperCase());
+                    FullyQualifiedClassName fullyQualifiedClassName = property.getFullyQualifiedClassName(imports, definitionLinks, swaggerEnumsParser, possibleReferencesForProperties);
+                    String propertyType = fullyQualifiedClassName.fullyQualifiedClassName;
+                    String importPackage = definitionLinks.getFullyQualifiedClassName(propertyType)
+                    if (StringUtils.isNotBlank(importPackage)) {
+                        imports.add(importPackage);
                     }
+                    propertyModel.put("type", propertyType);
+                    propertyModel.put("rawType", fullyQualifiedClassName.rawType);
+                    propertyModel.put("isList", fullyQualifiedClassName.list);
+                    fields.add(propertyModel)
                 }
 
                 fields.sort { x, y -> x.get("name") <=> y.get("name") }
@@ -137,16 +136,6 @@ public class ComponentCreator {
                 throw new Exception("Exception caught processing ${it.definitionName}: " + e.getMessage(), e);
             }
         }
-    }
-
-    // for NotificationView and UserNotificationView we have to omit the
-    // 'content' property because the swagger claims it is a String when in
-    // fact it is an object and this discrepancy breaks gson parsing
-    private boolean shouldProcessProperty(String definitionName, String propertyName) {
-        if (('NotificationView' == definitionName || 'NotificationUserView' == definitionName) && ('content' == propertyName)) {
-            return false;
-        }
-        return true;
     }
 
     private void addImport(Set imports, String apiClass) {

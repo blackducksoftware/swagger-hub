@@ -1,2 +1,2 @@
-/api/policy-rules,PolicyRuleViewV2
+/api/policy-rules,PolicyRuleView
 /api/components,ComponentSearchResultView

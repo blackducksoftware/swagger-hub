@@ -7,10 +7,12 @@ CodeLocationView,scans,true,String
 ComponentVersionView,references,true,ComponentVersionReferenceView
 ComponentVersionView,component,false,ComponentView
 ComponentVersionView,origins,true,OriginView
-ComponentVersionView,vulnerabilities,true,VulnerabilityV2View
+ComponentVersionView,vulnerabilities,true,VulnerabilityView
 ComponentVersionView,risk-profile,false,ComponentVersionRiskView
 
 ComponentView,versions,true,ComponentVersionView
+
+CustomFieldObjectView,custom-field-list,true,CustomFieldView
 
 CweView,sources
 
@@ -25,6 +27,8 @@ NotificationUserView,notifications,false,NotificationUserView
 
 ProjectView,versions,true,ProjectVersionView
 ProjectView,canonicalVersion,false,ProjectVersionView
+ProjectView,project-mappings,true,ProjectMappingView
+ProjectView,tags,true,TagView
 ProjectView,users,true,AssignedUserView
 ProjectView,usergroups,true,AssignedUserGroupView
 
@@ -56,15 +60,15 @@ UserGroupView,roles,true,RoleAssignmentView
 
 VersionBomComponentView,comments,true,UserCommentView
 VersionBomComponentView,component-issues,false,IssueView
-VersionBomComponentView,policy-rules,true,PolicyRuleViewV2
-VersionBomComponentView,vulnerabilities,true,VulnerabilityV2View
+VersionBomComponentView,policy-rules,true,PolicyRuleView
+VersionBomComponentView,vulnerabilities,true,VulnerabilityView
 VersionBomComponentView,matched-files,true,MatchedFileView
 
 VersionRiskProfileView,version,false,ProjectVersionView
 
 VulnerableComponentView,matched-files,true,MatchedFileView
-VulnerableComponentView,vulnerabilities,true,VulnerabilityV2View
+VulnerableComponentView,vulnerabilities,true,VulnerabilityView
 
-VulnerabilityV2View,related-vulnerabilities,false,VulnerabilityV2View
-VulnerabilityV2View,cwes,false,CweView
-VulnerabilityV2View,reference
+VulnerabilityView,related-vulnerabilities,false,VulnerabilityView
+VulnerabilityView,cwes,false,CweView
+VulnerabilityView,reference
