@@ -64,7 +64,7 @@ public class ModelCreator {
     public static final String MANUAL_COMPONENT_PACKAGE = MANUAL_PACKAGE_PREFIX + COMPONENT_PACKAGE_SUFFIX;
 
     public static void main(final String[] args) throws Exception {
-        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_2018.12.0_manually_edited.json").toURI());
+        final File jsonFile = new File(ModelCreator.class.getClassLoader().getResource("api-docs_2019.2.0_manually_edited.json").toURI());
         final FileInputStream jsonFileInputStream = new FileInputStream(jsonFile);
         final InputStreamReader jsonInputStreamReader = new InputStreamReader(jsonFileInputStream, StandardCharsets.UTF_8);
 

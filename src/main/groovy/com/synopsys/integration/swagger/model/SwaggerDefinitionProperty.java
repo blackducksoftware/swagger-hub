@@ -143,6 +143,8 @@ public class SwaggerDefinitionProperty extends Stringable {
             return "Long";
         } else if ("long".equals(swaggerPrimitive)) {
             return "Long";
+        } else if ("double".equals(swaggerPrimitive)) {
+            return "java.math.BigDecimal";
         } else if ("boolean".equals(swaggerPrimitive)) {
             return "Boolean";
         } else if ("DateTime".equals(swaggerPrimitive)) {
