@@ -15717,7 +15717,8 @@
           "description": "The vulnerability database\/reporting authority this vulnerability originates from",
           "enum": [
             "NVD",
-            "VULNDB"
+            "VULNDB",
+            "BDSA"
           ]
         },
         "vulnerabilityName": {
@@ -17439,7 +17440,8 @@
           "description": "The vulnerability database\/reporting authority this vulnerability originates from.",
           "enum": [
             "NVD",
-            "VULNDB"
+            "VULNDB",
+            "BDSA"
           ]
         },
         "technicalDescription": {
