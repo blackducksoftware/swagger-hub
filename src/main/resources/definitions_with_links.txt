@@ -63,6 +63,7 @@ VersionBomComponentView,component-issues,false,IssueView
 VersionBomComponentView,policy-rules,true,PolicyRuleView
 VersionBomComponentView,vulnerabilities,true,VulnerabilityView
 VersionBomComponentView,matched-files,true,MatchedFileView
+VersionBomComponentView,vulnerable-components,true,VulnerableComponentView
 
 VersionRiskProfileView,version,false,ProjectVersionView
 
